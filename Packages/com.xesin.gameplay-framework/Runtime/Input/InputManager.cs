@@ -89,7 +89,7 @@ namespace GameplayFramework.Input
                 var playerOneInput = CreatePlayerWithDevices(playerOneDevices);
             }
 
-            if (GameplaySettings.Instance.autocreatePlayersOnInput)
+            if (GameplayGlobalSettings.Instance.autocreatePlayersOnInput)
             {
                 var unpairedDevices = InputUser.GetUnpairedInputDevices().ToArray();
 
@@ -106,7 +106,7 @@ namespace GameplayFramework.Input
         {
             var device = control.device;
             int controllers = PlayerController.GetNumPlayerControllers();
-            if (!GameplaySettings.Instance.autocreatePlayersOnInput) return;
+            if (!GameplayGlobalSettings.Instance.autocreatePlayersOnInput) return;
 
             for (int i = 0; i < controllers; i++)
             {
@@ -134,7 +134,7 @@ namespace GameplayFramework.Input
             if (LocalPlayer.GetNumPlayers() >= MAX_PLAYERS)
                 return null;
 
-            var player = PlayerInput.Instantiate(GameplaySettings.Instance.localPlayerPrefab.gameObject, -1, null, -1, devices).GetComponent<LocalPlayer>();
+            var player = PlayerInput.Instantiate(GameplayGlobalSettings.Instance.localPlayerPrefab.gameObject, -1, null, -1, devices).GetComponent<LocalPlayer>();
 
             player.SetDevices(devices);
 
