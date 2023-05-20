@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameplayFramework
 {
-
+    [RequireComponent(typeof(CharacterMovement))]
     public class Pawn : GameplayObject
     {
         public float BaseEyeHeight = 1.5f;
@@ -14,6 +14,7 @@ namespace GameplayFramework
 
         public Controller Controller => currentController;
 
+        private CharacterMovement characterMovement;
         private Controller currentController = null;
         private GameplayCamera pawnCamera = null;
 
@@ -22,6 +23,7 @@ namespace GameplayFramework
 
         protected virtual void Awake()
         {
+            characterMovement = GetComponent<CharacterMovement>();
             var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
 
             for (int i = 0; i < gameplayComponents.Length; i++)
@@ -45,6 +47,27 @@ namespace GameplayFramework
         protected virtual void OnDestroy()
         {
             Unpossesed();
+        }
+
+        private void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            PushRigidBodies(hit);
+        }
+
+        private void PushRigidBodies(ControllerColliderHit hit)
+        {
+            // make sure we hit a non kinematic rigidbody
+            Rigidbody body = hit.collider.attachedRigidbody;
+            if (body == null || body.isKinematic) return;
+
+            // We dont want to push objects below us
+            if (hit.moveDirection.y < -0.3f) return;
+
+            // Calculate push direction from move direction, horizontal motion only
+            Vector3 pushDir = new Vector3(hit.moveDirection.x, 0.0f, hit.moveDirection.z);
+
+            // Apply the push and take strength into account
+            body.AddForce(pushDir, ForceMode.Impulse);
         }
 
         public virtual void PossessedBy(Controller controller)
@@ -197,6 +220,11 @@ namespace GameplayFramework
         public void AddMoveInput(Vector3 worldSpaceInput, float scale = 1)
         {
             controlInputVector += worldSpaceInput * scale;
+        }
+
+        public Vector3 GetVelocity()
+        {
+            return characterMovement.GetVelocity();
         }
     }
 }

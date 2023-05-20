@@ -60,7 +60,7 @@ public class CharacterMovement : GameplayObject
     /// <returns>
     /// a scaled input acceleration vector.
     /// </returns>
-    protected Vector3 ScaleInputAcceleration(Vector3 inputAcceleration)
+    protected virtual Vector3 ScaleInputAcceleration(Vector3 inputAcceleration)
     {
         return GetMaxAcceleration() * Vector3.ClampMagnitude(inputAcceleration, 1.0f);
     }
@@ -234,5 +234,10 @@ public class CharacterMovement : GameplayObject
 
         float overVelocityPercent = 1.01f;
         return (velocity.sqrMagnitude > maxSpeedSquared * overVelocityPercent);
+    }
+
+    public Vector3 GetVelocity()
+    {
+        return velocity;
     }
 }
