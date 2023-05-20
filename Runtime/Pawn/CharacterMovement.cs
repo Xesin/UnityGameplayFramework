@@ -23,7 +23,7 @@ public class CharacterMovement : GameplayObject
         characterController = GetComponent<CharacterController>();
     }
 
-    private void Update()
+    protected virtual void LateUpdate()
     {
         Vector3 inputVector = ConsumeInputVector();
 

@@ -197,7 +197,6 @@ namespace GameplayFramework
         public void AddMoveInput(Vector3 worldSpaceInput, float scale = 1)
         {
             controlInputVector += worldSpaceInput * scale;
-            Debug.Log(controlInputVector);
         }
     }
 }

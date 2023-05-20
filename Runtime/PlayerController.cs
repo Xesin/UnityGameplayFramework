@@ -25,7 +25,7 @@ namespace GameplayFramework
             Cursor.visible = GetDefaultCursorVisibility();
         }
 
-        protected virtual void Update()
+        protected virtual void LateUpdate()
         {
             UpdateRotation(Time.deltaTime);
 
