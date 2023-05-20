@@ -17,6 +17,16 @@ namespace GameplayFramework
             targetCamera = GetComponent<Camera>();
         }
 
+        private void OnEnable()
+        {
+            targetCamera.enabled = true;
+        }
+
+        private void OnDisable()
+        {
+            targetCamera.enabled = false;
+        }
+
         public void ApplyControlRotation(Quaternion rotation)
         {
             if(useControlRotation)

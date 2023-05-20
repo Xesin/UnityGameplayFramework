@@ -13,7 +13,7 @@ namespace GameplayFramework
         {
             if(possesedPawn)
             {
-                possesedPawn.Restart();
+                possesedPawn.Unpossesed();
             }
 
             possesedPawn = pawn;

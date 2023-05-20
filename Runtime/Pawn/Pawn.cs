@@ -1,5 +1,4 @@
 using GameplayFramework.Input;
-using System;
 using UnityEngine;
 
 namespace GameplayFramework
@@ -16,8 +15,10 @@ namespace GameplayFramework
         public Controller Controller => currentController;
 
         private Controller currentController = null;
+        private GameplayCamera pawnCamera = null;
 
-        private GameplayCamera currentCamera = null;
+        private Vector3 controlInputVector;
+        private Vector3 lastControlInputVector;
 
         protected virtual void Awake()
         {
@@ -30,6 +31,15 @@ namespace GameplayFramework
                     gameplayComponents[i].SetOwner(this);
                 }
             }
+            controlInputVector = Vector2.zero;
+
+            GameplayCamera camera = GetComponentInChildren<GameplayCamera>();
+            if (camera)
+            {
+                pawnCamera = camera;
+            }
+
+            Restart();
         }
 
         protected virtual void OnDestroy()
@@ -44,34 +54,38 @@ namespace GameplayFramework
             currentController = controller;
             if (controller is PlayerController playerController)
             {
-                SetupPlayerInput(playerController.GetInputComponent());
-                GameplayCamera camera = GetComponentInChildren<GameplayCamera>();
-                if (camera)
-                {
-                    currentCamera = camera;
-                }
+                SetupPlayerInput(playerController.GetInputComponent());   
+            }
+            if(pawnCamera)
+            {
+                pawnCamera.enabled = true;
             }
         }
 
         public virtual void Restart()
         {
             RecalculateBaseEyeHeight();
+            Internal_ConsumeInputVector();
+            if(pawnCamera && !Controller)
+            {
+                pawnCamera.enabled = false;
+            }
         }
 
         public virtual void Unpossesed()
         {
             if (!currentController) return;
 
-            if (currentCamera)
+            if (pawnCamera)
             {
-                currentCamera.enabled = false;
-                currentCamera = null;
+                pawnCamera.enabled = false;
             }
             if (currentController is PlayerController playerController)
             {
                 ClearPlayerInput(playerController.GetInputComponent());
             }
             currentController = null;
+            Restart();
         }
 
         public virtual void SetupPlayerInput(InputComponent inputComponent)
@@ -113,9 +127,9 @@ namespace GameplayFramework
 
         public void FaceRotation(Vector3 rotation, float deltaTime)
         {
-            if (currentCamera)
+            if (pawnCamera)
             {
-                currentCamera.ApplyControlRotation(Quaternion.Euler(rotation));
+                pawnCamera.ApplyControlRotation(Quaternion.Euler(rotation));
             }
 
             if (useControllerPitch || useControllerRoll || useControllerYaw)
@@ -159,12 +173,12 @@ namespace GameplayFramework
 
         public virtual Vector3 GetPawnViewLocation()
         {
-	        return transform.position + new Vector3(0f, BaseEyeHeight, 0f);
+            return transform.position + new Vector3(0f, BaseEyeHeight, 0f);
         }
 
         public virtual Quaternion GetViewDirection()
         {
-            if(Controller)
+            if (Controller)
             {
                 Quaternion quaternion = Quaternion.Euler(Controller.GetControlRotation());
                 return quaternion;
@@ -172,5 +186,18 @@ namespace GameplayFramework
 
             return transform.rotation;
         }
-}
+
+        internal Vector3 Internal_ConsumeInputVector()
+        {
+            lastControlInputVector = controlInputVector;
+            controlInputVector = Vector3.zero;
+            return lastControlInputVector;
+        }
+
+        public void AddMoveInput(Vector3 worldSpaceInput, float scale = 1)
+        {
+            controlInputVector += worldSpaceInput * scale;
+            Debug.Log(controlInputVector);
+        }
+    }
 }
