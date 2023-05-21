@@ -71,7 +71,7 @@ public class CharacterMovement : PawnMovement
         if (orientToMovement && velocity.sqrMagnitude > 0)
         {
             var currentRotation = transform.rotation.eulerAngles;
-            var desiredRotation = Quaternion.LookRotation(inputVector, Vector3.up).eulerAngles;
+            var desiredRotation = Quaternion.LookRotation(velocity, Vector3.up).eulerAngles;
             var deltaRotation = rotationRate.y * deltaTime;
 
             currentRotation.y = Mathf.MoveTowardsAngle(currentRotation.y, desiredRotation.y, deltaRotation);
