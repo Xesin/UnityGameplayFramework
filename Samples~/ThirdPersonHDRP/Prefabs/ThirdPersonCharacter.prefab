@@ -2810,6 +2810,9 @@ MonoBehaviour:
   forceMaxAcceleration: 0
   orientToMovement: 1
   rotationRate: {x: 0, y: 360, z: 0}
+  jumpYVelocity: 6
+  gravity: 9.8
+  gravityScale: 1
 --- !u!114 &7351962485797275111
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2841,6 +2844,11 @@ MonoBehaviour:
   useControllerYaw: 0
   useControllerPitch: 0
   useControllerRoll: 0
+  pressedJump: 0
+  wasJumping: 0
+  jumpKeyHoldTime: 0
+  jumpMaxCount: 1
+  jumpMaxHoldTime: 0.25
   crosshair: {fileID: 0}
   thirdPersonCamera: {fileID: 4677960749017049941}
 --- !u!1 &9203139687003840241

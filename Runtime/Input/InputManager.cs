@@ -26,7 +26,7 @@ namespace GameplayFramework.Input
         private bool initialized = false;
         public bool Initialized => initialized;
 
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void InitializeOnLoad()
         {
             Instance.Initialize();

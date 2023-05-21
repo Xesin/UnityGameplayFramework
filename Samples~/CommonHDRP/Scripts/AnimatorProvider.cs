@@ -19,6 +19,13 @@ namespace GameplayFramework.Samples
             if (PawnOwner && targetAnimator)
             {
                 targetAnimator.SetFloat("Speed", PawnOwner.GetVelocity().magnitude);
+
+                var charMovement = PawnOwner.GetMovementComponent() as CharacterMovement;
+                var character = PawnOwner as Character;
+
+                targetAnimator.SetBool("Grounded", charMovement.IsMovingOnGround());
+                targetAnimator.SetBool("FreeFall", charMovement.IsFalling() && !character.wasJumping);
+                targetAnimator.SetBool("Jump", character.wasJumping);
             }
         }
     }

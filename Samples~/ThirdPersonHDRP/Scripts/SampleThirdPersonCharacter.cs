@@ -62,10 +62,22 @@ namespace GameplayFramework.Samples
             AddControllerYawInput(axisValue.x);
         }
 
+        private void Jump(InputAction.CallbackContext context)
+        {
+            Debug.Log("Jump");
+            Jump();
+        }
+
+        private void EndJump(InputAction.CallbackContext context)
+        {
+            StopJumping();
+        }
+
         public override Vector3 GetPawnViewLocation()
         {
             return thirdPersonCamera.transform.position;
         }
+
 
         public override void SetupPlayerInput(InputComponent inputComponent)
         {
@@ -74,6 +86,8 @@ namespace GameplayFramework.Samples
             inputComponent.BindAction(this, "Look", OnLook, InputActionPhase.Performed, InputActionPhase.Canceled);
             inputComponent.BindAction(this, "LookContinuous", OnLookContinuous, InputActionPhase.Performed, InputActionPhase.Canceled);
             inputComponent.BindAction(this, "Fire", OnFire, InputActionPhase.Performed);
+            inputComponent.BindAction(this, "Jump", Jump, InputActionPhase.Performed);
+            inputComponent.BindAction(this, "Jump", EndJump, InputActionPhase.Canceled);
         }
     }
 }
