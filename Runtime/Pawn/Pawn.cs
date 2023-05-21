@@ -97,6 +97,7 @@ namespace GameplayFramework
 
         public virtual void Unpossesed()
         {
+            Restart();
             if (!currentController) return;
 
             if (pawnCamera)
@@ -108,7 +109,6 @@ namespace GameplayFramework
                 ClearPlayerInput(playerController.GetInputComponent());
             }
             currentController = null;
-            Restart();
         }
 
         public virtual void SetupPlayerInput(InputComponent inputComponent)

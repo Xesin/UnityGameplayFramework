@@ -9,7 +9,6 @@ namespace GameplayFramework
     {
         public float armLength = 1.4f;
         public bool useControlRotation = true;
-        public bool useAbsoluteRotation = false;
 
         private List<Transform> attachedObjects = new List<Transform>();
         private Quaternion absoluteRotation = Quaternion.identity;

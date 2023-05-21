@@ -80,6 +80,7 @@ namespace GameplayFramework
 
         public override void Posses(Pawn pawn)
         {
+            SetControlRotation(pawn.transform.rotation.eulerAngles);
             base.Posses(pawn);
             Camera camera = pawn.GetComponentInChildren<Camera>();
             if (camera)
@@ -87,7 +88,6 @@ namespace GameplayFramework
                 player.SetCurrentCamera(camera);
                 camera.enabled = true;
             }
-            SetControlRotation(pawn.transform.rotation.eulerAngles);
         }
 
         protected virtual CursorLockMode GetDefaultCursorLockMode()

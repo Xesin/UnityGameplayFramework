@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameplayFramework
 {
-    public class Controller : MonoBehaviour
+    public class Controller : GameplayObject
     {
         protected Pawn possesedPawn;
 
