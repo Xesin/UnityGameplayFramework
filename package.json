@@ -9,6 +9,18 @@
     "dependencies": {
         "com.unity.inputsystem" : "1.1.0",
         "com.unity.addressables" : "1.10.0"
-    }
+    },
+    "samples": [
+        {
+            "displayName": "Common sample assets HDRP",
+            "description": "Contains the common assets and scripts between all the HDRP samples",
+            "path": "Samples~/CommonHDRP"
+        },
+        {
+            "displayName": "Third Person Game HDRP",
+            "description": "This sample contains an example of a third person character using HDRP",
+            "path": "Samples~/ThirdPersonHDRP"
+        }        
+    ]
   }
   
