@@ -1,12 +1,13 @@
-using GameplayFramework;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class SceneInit : MonoBehaviour
+namespace GameplayFramework.Samples
 {
-    private IEnumerator Start()
+    public class SceneInit : MonoBehaviour
     {
-        yield return FindObjectOfType<GameMode>().OnLevelReady();
+        private IEnumerator Start()
+        {
+            yield return FindObjectOfType<GameMode>().OnLevelReady();
+        }
     }
 }

@@ -1,25 +1,25 @@
-using GameplayFramework;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class AnimatorProvider : GameplayObject
+namespace GameplayFramework.Samples
 {
-    [SerializeField]
-    private Animator targetAnimator;
-    private Pawn PawnOwner;
-
-    public override void SetOwner(GameplayObject obj)
+    public class AnimatorProvider : GameplayObject
     {
-        base.SetOwner(obj);
-        PawnOwner = obj as Pawn;
-    }
+        [SerializeField]
+        private Animator targetAnimator;
+        private Pawn PawnOwner;
 
-    private void LateUpdate()
-    {
-        if(PawnOwner && targetAnimator)
+        public override void SetOwner(GameplayObject obj)
         {
-            targetAnimator.SetFloat("Speed", PawnOwner.GetVelocity().magnitude);
+            base.SetOwner(obj);
+            PawnOwner = obj as Pawn;
+        }
+
+        private void LateUpdate()
+        {
+            if (PawnOwner && targetAnimator)
+            {
+                targetAnimator.SetFloat("Speed", PawnOwner.GetVelocity().magnitude);
+            }
         }
     }
 }

@@ -1,11 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class AnimatorEvents : MonoBehaviour
+namespace GameplayFramework.Samples
 {
-    private void OnFootstep()
+    public class AnimatorEvents : MonoBehaviour
     {
+        private void OnFootstep()
+        {
 
+        }
     }
 }

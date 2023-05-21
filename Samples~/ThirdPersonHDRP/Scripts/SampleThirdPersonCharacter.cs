@@ -1,77 +1,79 @@
-using GameplayFramework;
 using GameplayFramework.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class SampleThirdPersonCharacter : Character
+namespace GameplayFramework.Samples
 {
-    public GameObject crosshair;
-    public Camera thirdPersonCamera;
-
-    Vector2 lastLookInput;
-    Vector2 lastMoveInput;
-
-    protected override void Update()
+    public class SampleThirdPersonCharacter : Character
     {
-        if (lastLookInput != Vector2.zero)
+        public GameObject crosshair;
+        public Camera thirdPersonCamera;
+
+        Vector2 lastLookInput;
+        Vector2 lastMoveInput;
+
+        protected override void Update()
         {
-            AddControllerPitchInput(lastLookInput.y);
-            AddControllerYawInput(lastLookInput.x);
+            if (lastLookInput != Vector2.zero)
+            {
+                AddControllerPitchInput(lastLookInput.y);
+                AddControllerYawInput(lastLookInput.x);
+            }
+
+            var rotVector = new Vector3(0, GetControlRotation().y, 0);
+            var quaternion = Quaternion.Euler(rotVector);
+
+            AddMoveInput(quaternion * Vector3.forward, lastMoveInput.y);
+            AddMoveInput(quaternion * Vector3.right, lastMoveInput.x);
+
+            base.Update();
         }
 
-        var rotVector = new Vector3(0, GetControlRotation().y, 0);
-        var quaternion = Quaternion.Euler(rotVector);
+        public override void Restart()
+        {
+            base.Restart();
+            lastLookInput = Vector2.zero;
+            lastMoveInput = Vector2.zero;
+        }
 
-        AddMoveInput(quaternion * Vector3.forward, lastMoveInput.y);
-        AddMoveInput(quaternion * Vector3.right, lastMoveInput.x);
+        private void OnMove(InputAction.CallbackContext context)
+        {
+            lastMoveInput = context.ReadValue<Vector2>();
+        }
 
-        base.Update();
-    }
+        private void OnFire(InputAction.CallbackContext context)
+        {
+            Vector3 viewPosition;
+            Quaternion viewDirection;
 
-    public override void Restart()
-    {
-        base.Restart();
-        lastLookInput = Vector2.zero;
-        lastMoveInput = Vector2.zero;
-    }
+            GetEyesViewPoint(out viewPosition, out viewDirection);
 
-    private void OnMove(InputAction.CallbackContext context)
-    {
-        lastMoveInput = context.ReadValue<Vector2>();
-    }
+            Debug.DrawLine(viewPosition, viewPosition + viewDirection * Vector3.forward * 10f, Color.red, 1f);
+        }
+        private void OnLookContinuous(InputAction.CallbackContext context)
+        {
+            lastLookInput = context.ReadValue<Vector2>();
+        }
 
-    private void OnFire(InputAction.CallbackContext context)
-    {
-        Vector3 viewPosition;
-        Quaternion viewDirection;
+        private void OnLook(InputAction.CallbackContext context)
+        {
+            Vector2 axisValue = context.ReadValue<Vector2>();
+            AddControllerPitchInput(axisValue.y);
+            AddControllerYawInput(axisValue.x);
+        }
 
-        GetEyesViewPoint(out viewPosition, out viewDirection);
+        public override Vector3 GetPawnViewLocation()
+        {
+            return thirdPersonCamera.transform.position;
+        }
 
-        Debug.DrawLine(viewPosition, viewPosition + viewDirection * Vector3.forward * 10f, Color.red, 1f);
-    }
-    private void OnLookContinuous(InputAction.CallbackContext context)
-    {
-        lastLookInput = context.ReadValue<Vector2>();
-    }
-
-    private void OnLook(InputAction.CallbackContext context)
-    {
-        Vector2 axisValue = context.ReadValue<Vector2>();
-        AddControllerPitchInput(axisValue.y);
-        AddControllerYawInput(axisValue.x);
-    }
-
-    public override Vector3 GetPawnViewLocation()
-    {
-        return thirdPersonCamera.transform.position;
-    }
-
-    public override void SetupPlayerInput(InputComponent inputComponent)
-    {
-        base.SetupPlayerInput(inputComponent);
-        inputComponent.BindAction(this, "Move", OnMove, InputActionPhase.Performed, InputActionPhase.Canceled);
-        inputComponent.BindAction(this, "Look", OnLook, InputActionPhase.Performed, InputActionPhase.Canceled);
-        inputComponent.BindAction(this, "LookContinuous", OnLookContinuous, InputActionPhase.Performed, InputActionPhase.Canceled);
-        inputComponent.BindAction(this, "Fire", OnFire, InputActionPhase.Performed);
+        public override void SetupPlayerInput(InputComponent inputComponent)
+        {
+            base.SetupPlayerInput(inputComponent);
+            inputComponent.BindAction(this, "Move", OnMove, InputActionPhase.Performed, InputActionPhase.Canceled);
+            inputComponent.BindAction(this, "Look", OnLook, InputActionPhase.Performed, InputActionPhase.Canceled);
+            inputComponent.BindAction(this, "LookContinuous", OnLookContinuous, InputActionPhase.Performed, InputActionPhase.Canceled);
+            inputComponent.BindAction(this, "Fire", OnFire, InputActionPhase.Performed);
+        }
     }
 }
