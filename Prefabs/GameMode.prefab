@@ -52,4 +52,5 @@ MonoBehaviour:
     type: 3}
   <playerViewport>k__BackingField: {fileID: 4137718823533730179, guid: 02095dc14e463e24886eda0090b83827,
     type: 3}
-  <globalUI>k__BackingField: {fileID: 0}
+  <globalUI>k__BackingField: {fileID: 8815356044408792473, guid: 7b7e91364f29a904596591e9988f32f5,
+    type: 3}
