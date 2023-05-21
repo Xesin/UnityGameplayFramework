@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameplayFramework
 {
-    [RequireComponent(typeof(CharacterMovement))]
+    [RequireComponent(typeof(PawnMovement))]
     public class Pawn : GameplayObject
     {
         public float BaseEyeHeight = 1.5f;
@@ -14,7 +14,7 @@ namespace GameplayFramework
 
         public Controller Controller => currentController;
 
-        private CharacterMovement characterMovement;
+        private PawnMovement movementComponent;
         private Controller currentController = null;
         private GameplayCamera pawnCamera = null;
 
@@ -23,7 +23,7 @@ namespace GameplayFramework
 
         protected virtual void Awake()
         {
-            characterMovement = GetComponent<CharacterMovement>();
+            movementComponent = GetComponent<PawnMovement>();
             var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
 
             for (int i = 0; i < gameplayComponents.Length; i++)
@@ -119,6 +119,11 @@ namespace GameplayFramework
         public virtual void ClearPlayerInput(InputComponent inputComponent)
         {
             inputComponent.ClearBinds(this);
+        }
+
+        public PawnMovement GetMovementComponent()
+        {
+            return movementComponent;
         }
 
         public void AddControllerPitchInput(float Val)
@@ -224,7 +229,7 @@ namespace GameplayFramework
 
         public Vector3 GetVelocity()
         {
-            return characterMovement.GetVelocity();
+            return movementComponent.GetVelocity();
         }
     }
 }

@@ -1,10 +1,9 @@
-using GameplayFramework;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class CharacterMovement : GameplayObject
+public class CharacterMovement : PawnMovement
 {
-    public float maxWalkSpeed = 0.6f;
+    public float maxWalkSpeed = 6f;
     public float maxAcceleration = 20.48f;
     public float groundFriction = 8f;
     public float brakingDecelerationWalking = 20.48f;
@@ -13,43 +12,18 @@ public class CharacterMovement : GameplayObject
     public Vector3 rotationRate = new Vector3(0, 360, 0);
 
     private CharacterController characterController;
-    private Pawn pawnOwner;
 
-    private Vector3 acceleration;
-    private Vector3 velocity;
-
-    protected virtual void Awake()
+    protected override void Awake()
     {
         characterController = GetComponent<CharacterController>();
     }
 
-    protected virtual void LateUpdate()
+    protected override void LateUpdate()
     {
+        base.LateUpdate();
         Vector3 inputVector = ConsumeInputVector();
 
         ControlledCharacterMove(inputVector, Time.deltaTime);
-    }
-
-    /// <summary>
-    /// Sets the owner of a gameplay object as a pawn.
-    /// </summary>
-    /// <param name="GameplayObject">New Owner</param>
-    public override void SetOwner(GameplayObject obj)
-    {
-        base.SetOwner(obj);
-        pawnOwner = obj as Pawn;
-    }
-
-    /// <summary>
-    /// Returns and consumes the input vector of the pawn owner or a zero vector if there is no pawn
-    /// owner.
-    /// </summary>
-    /// <returns>
-    /// The input vector.
-    /// </returns>
-    protected Vector3 ConsumeInputVector()
-    {
-        return pawnOwner ? pawnOwner.Internal_ConsumeInputVector() : Vector3.zero;
     }
 
     /// <summary>
@@ -77,13 +51,7 @@ public class CharacterMovement : GameplayObject
         return maxAcceleration;
     }
 
-    /// <summary>
-    /// Returns the maximum speed as a float value.
-    /// </summary>
-    /// <returns>
-    /// Max speed value.
-    /// </returns>
-    public virtual float GetMaxSpeed()
+    public override float GetMaxSpeed()
     {
         return maxWalkSpeed;
     }
@@ -168,7 +136,7 @@ public class CharacterMovement : GameplayObject
             }
             else
             {
-                acceleration = maxAccel * (velocity.sqrMagnitude < Mathf.Epsilon ? transform.forward :  velocity.normalized);
+                acceleration = maxAccel * (velocity.sqrMagnitude < Mathf.Epsilon ? transform.forward : velocity.normalized);
             }
         }
 
@@ -220,24 +188,5 @@ public class CharacterMovement : GameplayObject
             velocity = Vector3.zero;
             return;
         }
-    }
-
-    /// <summary>
-    /// Returns if the current velocity is exceeding the max speed passed by parameter
-    /// </summary>
-    /// <param name="MaxSpeed"></param>
-    /// <returns></returns>
-    public bool IsExceedingMaxSpeed(float MaxSpeed)
-    {
-        MaxSpeed = Mathf.Max(0f, MaxSpeed);
-        float maxSpeedSquared = MaxSpeed * MaxSpeed;
-
-        float overVelocityPercent = 1.01f;
-        return (velocity.sqrMagnitude > maxSpeedSquared * overVelocityPercent);
-    }
-
-    public Vector3 GetVelocity()
-    {
-        return velocity;
     }
 }
