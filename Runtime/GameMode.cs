@@ -1,8 +1,6 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.ResourceManagement.Util;
-using GameplayFramework.Input;
 
 namespace GameplayFramework
 {
@@ -86,7 +84,7 @@ namespace GameplayFramework
 
         public virtual void TogglePause()
         {
-            if(!isPaused)
+            if (!isPaused)
             {
                 PauseGame();
             }

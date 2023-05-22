@@ -1,8 +1,6 @@
-using System;
+using GameplayFramework.Input;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using GameplayFramework.Input;
 
 namespace GameplayFramework
 {

@@ -1,6 +1,4 @@
-using System.Net;
 using UnityEngine;
-using static Codice.Client.Common.Threading.ThreadWaiter;
 
 namespace GameplayFramework
 {
@@ -149,7 +147,7 @@ namespace GameplayFramework
 
             MoveAlongFloor(moveVelocity, deltaTime);
 
-            if(!characterController.isGrounded)
+            if (!characterController.isGrounded)
             {
                 SetMovementMode(MovementMode.Falling);
             }
@@ -166,7 +164,7 @@ namespace GameplayFramework
 
             bool endingJumpForce = false;
 
-            if(characterOwner.jumpForceTimeRemaining > 0f)
+            if (characterOwner.jumpForceTimeRemaining > 0f)
             {
                 float jumpForceTime = Mathf.Min(characterOwner.jumpForceTimeRemaining, deltaTime);
 
@@ -198,7 +196,7 @@ namespace GameplayFramework
 
             characterController.Move(Adjusted);
 
-            if(characterController.isGrounded)
+            if (characterController.isGrounded)
             {
                 SetMovementMode(MovementMode.Walking);
             }
@@ -209,21 +207,22 @@ namespace GameplayFramework
 
             Vector3 Result = initialVelocity;
 
-	        if (deltaTime > 0f)
-	        {
-		        // Apply gravity.
-		        Result += gravity * deltaTime;
+            if (deltaTime > 0f)
+            {
+                // Apply gravity.
+                Result += gravity * deltaTime;
 
                 // Don't exceed terminal velocity.
                 float TerminalLimit = Mathf.Abs(200f);
-		        if (Result.sqrMagnitude > TerminalLimit * TerminalLimit)
-		        {
-			        Vector3 GravityDir = gravity.normalized;
+                if (Result.sqrMagnitude > TerminalLimit * TerminalLimit)
+                {
+                    Vector3 GravityDir = gravity.normalized;
 
-                    Result = Vector3.ProjectOnPlane(Result, GravityDir) + GravityDir * TerminalLimit;        }
-	        }
+                    Result = Vector3.ProjectOnPlane(Result, GravityDir) + GravityDir * TerminalLimit;
+                }
+            }
 
-	        return Result;
+            return Result;
         }
 
         protected virtual void PhysicsRotation(float deltaTime)

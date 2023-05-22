@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using static GameplayFramework.Input.InputManager;
 
 namespace GameplayFramework.Input
 {
@@ -131,7 +130,7 @@ namespace GameplayFramework.Input
 
         public void SetPlayerInput(PlayerInput playerInput)
         {
-            if(this.playerInput != playerInput)
+            if (this.playerInput != playerInput)
             {
                 this.playerInput = playerInput;
                 foreach (var bind in binds)
@@ -155,7 +154,7 @@ namespace GameplayFramework.Input
                     }
                 }
             }
-            
+
         }
 
         public void SetActionMap(string mapNameOrId)
@@ -198,9 +197,9 @@ namespace GameplayFramework.Input
                 }
             }
 
-            
 
-            
+
+
         }
 
         public static string GetControlScheme(string type, InputActionAsset asset)

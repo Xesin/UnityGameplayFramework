@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameplayFramework
@@ -11,7 +10,7 @@ namespace GameplayFramework
 
         public virtual void Posses(Pawn pawn)
         {
-            if(possesedPawn)
+            if (possesedPawn)
             {
                 possesedPawn.Unpossesed();
             }

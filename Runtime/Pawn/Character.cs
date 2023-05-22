@@ -1,5 +1,4 @@
 using GameplayFramework;
-using System.Xml.Serialization;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterMovement))]
@@ -56,7 +55,7 @@ public class Character : Pawn
 
         if (characterMovement)
         {
-            if(pressedJump)
+            if (pressedJump)
             {
                 bool firstJump = jumpCurrentCount == 0;
 
@@ -68,9 +67,9 @@ public class Character : Pawn
                 }
 
                 bool didJump = CanJump() && characterMovement.DoJump();
-                if(didJump)
+                if (didJump)
                 {
-                    if(!wasJumping)
+                    if (!wasJumping)
                     {
                         jumpCurrentCount++;
                         jumpForceTimeRemaining = GetJumpMaxHoldTime();
@@ -133,9 +132,9 @@ public class Character : Pawn
 
         if (jumpIsAllowed)
         {
-            if(!wasJumping || GetJumpMaxHoldTime() <= 0f)
+            if (!wasJumping || GetJumpMaxHoldTime() <= 0f)
             {
-                if(jumpCurrentCount == 0 && characterMovement.IsFalling())
+                if (jumpCurrentCount == 0 && characterMovement.IsFalling())
                 {
                     jumpIsAllowed = jumpCurrentCount + 1 < jumpMaxCount;
                 }
