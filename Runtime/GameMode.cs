@@ -21,10 +21,6 @@ namespace GameplayFramework
         [field: SerializeField]
         public UIViewport playerViewport { get; private set; }
 
-        [field: SerializeField]
-        public GameObject globalUI { get; private set; }
-
-
         private bool isPaused = false;
 
         public virtual IEnumerator OnLevelReady()
@@ -34,9 +30,6 @@ namespace GameplayFramework
             CreateInitialPlayerPawns();
 
             yield return null;
-            yield return null;
-
-            ViewportSubsystem.Instance.AddToScreen(Instantiate(globalUI));
         }
 
         public virtual PlayerController CreatePlayerController(LocalPlayer localPlayer)
