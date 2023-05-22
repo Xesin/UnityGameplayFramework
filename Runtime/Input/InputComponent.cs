@@ -11,20 +11,29 @@ namespace GameplayFramework.Input
 
     public class InputComponent : MonoBehaviour
     {
-        private struct InputBind
+        private class InputBind
         {
             public InputAction inputAction;
             public InputActionPhase actionPhase;
             public Action<InputAction.CallbackContext> action;
+
+            public InputBind(InputAction inputAction, InputActionPhase phase, Action<InputAction.CallbackContext> action)
+            {
+                this.inputAction = inputAction;
+                actionPhase = phase;
+                this.action = action;
+            }
         }
 
         public InputDevice[] Devices { get; private set; } = new InputDevice[0];
+
+        public event Action<string> OnActionMapSwitch;
 
         private PlayerInput playerInput;
 
         private Dictionary<object, List<InputBind>> binds = new Dictionary<object, List<InputBind>>();
 
-        public void BindAction(object context, string actionName, Action<InputAction.CallbackContext> action, params InputActionPhase[] phases)
+        public void Bind(object context, string actionName, Action<InputAction.CallbackContext> action, params InputActionPhase[] phases)
         {
             if (context == null)
             {
@@ -32,43 +41,37 @@ namespace GameplayFramework.Input
                 return;
             }
 
-            InputAction inputAction = playerInput.actions.FindAction(actionName);
-            if (inputAction == null)
+            AddBinding(context, actionName, (inputAction, phase) => new InputBind(inputAction, phase, action), phases);
+        }
+
+        public void Bind2DAxis(object context, string actionName, Action<Vector2> action, params InputActionPhase[] phases)
+        {
+            Action<InputAction.CallbackContext> actionMapper = (context) =>
             {
-                Debug.LogError($"No input action with the name/id {actionName} found");
-                return;
-            }
+                action?.Invoke(context.ReadValue<Vector2>());
+            };
 
-            if (!binds.TryGetValue(context, out var actionsList))
+            AddBinding(context, actionName, (inputAction, phase) => new InputBind(inputAction, phase, actionMapper), phases);
+        }
+
+        public void BindAxis(object context, string actionName, Action<float> action, params InputActionPhase[] phases)
+        {
+            Action<InputAction.CallbackContext> actionMapper = (context) =>
             {
-                actionsList = new List<InputBind>();
-                binds.Add(context, actionsList);
-            }
+                action?.Invoke(context.ReadValue<float>());
+            };
 
-            for (int i = 0; i < phases.Length; i++)
+            AddBinding(context, actionName, (inputAction, phase) => new InputBind(inputAction, phase, actionMapper), phases);
+        }
+
+        public void BindAction(object context, string actionName, Action action, params InputActionPhase[] phases)
+        {
+            Action<InputAction.CallbackContext> actionMapper = (context) =>
             {
-                var phase = phases[i];
+                action?.Invoke();
+            };
 
-                actionsList.Add(new InputBind()
-                {
-                    inputAction = inputAction,
-                    action = action,
-                    actionPhase = phase
-                });
-
-                switch (phase)
-                {
-                    case InputActionPhase.Started:
-                        inputAction.started += action;
-                        break;
-                    case InputActionPhase.Canceled:
-                        inputAction.canceled += action;
-                        break;
-                    case InputActionPhase.Performed:
-                        inputAction.performed += action;
-                        break;
-                }
-            }
+            AddBinding(context, actionName, (inputAction, phase) => new InputBind(inputAction, phase, actionMapper), phases);
         }
 
         public InputAction GetAction(string name)
@@ -126,19 +129,8 @@ namespace GameplayFramework.Input
             playerInput.ActivateInput();
         }
 
-        public void SwtichActionMap(Maps newMap)
-        {
-            playerInput.SwitchCurrentActionMap(Enum.GetName(typeof(Maps), newMap));
-        }
-
-        public void DisableActionMap(Maps newMap)
-        {
-            playerInput.actions.FindActionMap(Enum.GetName(typeof(Maps), newMap)).Disable();
-        }
-
         public void SetPlayerInput(PlayerInput playerInput)
         {
-
             if(this.playerInput != playerInput)
             {
                 this.playerInput = playerInput;
@@ -147,7 +139,7 @@ namespace GameplayFramework.Input
                     var context = bind.Key;
                     foreach (var bindDefinition in bind.Value)
                     {
-                        BindAction(context, bindDefinition.inputAction.name, bindDefinition.action, bindDefinition.actionPhase);
+                        Bind(context, bindDefinition.inputAction.name, bindDefinition.action, bindDefinition.actionPhase);
                         switch (bindDefinition.actionPhase)
                         {
                             case InputActionPhase.Started:
@@ -163,6 +155,51 @@ namespace GameplayFramework.Input
                     }
                 }
             }
+            
+        }
+
+        public void SetActionMap(string mapNameOrId)
+        {
+            playerInput.SwitchCurrentActionMap(mapNameOrId);
+            OnActionMapSwitch?.Invoke(mapNameOrId);
+        }
+
+        private void AddBinding(object context, string actionName, Func<InputAction, InputActionPhase, InputBind> inputBindConstructor, params InputActionPhase[] phases)
+        {
+            InputAction inputAction = playerInput.actions.FindAction(actionName);
+            if (inputAction == null)
+            {
+                Debug.LogError($"No input action with the name/id {actionName} found");
+                return;
+            }
+
+            if (!binds.TryGetValue(context, out var actionsList))
+            {
+                actionsList = new List<InputBind>();
+                binds.Add(context, actionsList);
+            }
+
+            for (int i = 0; i < phases.Length; i++)
+            {
+                var phase = phases[i];
+                var inputBind = inputBindConstructor(inputAction, phase);
+                actionsList.Add(inputBind);
+                switch (phase)
+                {
+                    case InputActionPhase.Started:
+                        inputAction.started += inputBind.action;
+                        break;
+                    case InputActionPhase.Canceled:
+                        inputAction.canceled += inputBind.action;
+                        break;
+                    case InputActionPhase.Performed:
+                        inputAction.performed += inputBind.action;
+                        break;
+                }
+            }
+
+            
+
             
         }
 

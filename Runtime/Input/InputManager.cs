@@ -1,4 +1,3 @@
-using Palmmedia.ReportGenerator.Core;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,14 +10,6 @@ namespace GameplayFramework.Input
 {
     public class InputManager : ComponentSingleton<InputManager>
     {
-        public enum Maps
-        {
-            None = 0,
-            Adventure = 1,
-            UI = 2,
-            Activity = 3
-        }
-
         private const int MAX_PLAYERS = 2;
 
         public UnityAction OnNewPlayer;
@@ -65,15 +56,6 @@ namespace GameplayFramework.Input
             }
         }
 
-        public void ChangePlayerActionMap(PlayerController playerController, Maps newMap)
-        {
-            if (!playerController) return;
-
-            InputComponent playerInput = playerController.GetInputComponent();
-
-            playerInput.SwtichActionMap(newMap);
-        }
-
         private void LookForUnpairedDevices()
         {
             var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
@@ -118,8 +100,6 @@ namespace GameplayFramework.Input
             }
 
             var player = CreatePlayerWithDevices(device);
-
-
         }
 
         public LocalPlayer CreatePlayer(InputDevice device)
