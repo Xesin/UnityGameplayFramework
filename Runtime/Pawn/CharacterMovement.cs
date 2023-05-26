@@ -5,6 +5,7 @@ namespace GameplayFramework
 {
     public enum MovementMode
     {
+        None,
         Walking,
         Falling
     }
@@ -12,22 +13,30 @@ namespace GameplayFramework
     [RequireComponent(typeof(CharacterController))]
     public class CharacterMovement : PawnMovement
     {
-        public float maxWalkSpeed = 6f;
         public float maxAcceleration = 20.48f;
-        public float groundFriction = 8f;
-        public float brakingDecelerationWalking = 20.48f;
         public bool forceMaxAcceleration = false;
         public bool orientToMovement = false;
         public Vector3 rotationRate = new Vector3(0, 360, 0);
+
+        [Header("Walking")]
+        public float maxWalkSpeed = 6f;
+        public float groundFriction = 8f;
+        public float brakingDecelerationWalking = 20.48f;
+
+        [Header("Falling")]
+        public float fallingLateralFriction = 0f;
+        public float brakingDecelerationFalling = 0f;
 
         [Header("Jumping")]
         public bool applyGravityWhileJumping = true;
         public float jumpYVelocity = 10f;
         public float gravityScale = 1;
-        private CharacterController characterController;
+
         private Character characterOwner;
 
+        private CharacterController characterController;
         protected RootMotionSource rootMotionComponent;
+
         protected MovementMode movementMode = MovementMode.Walking;
         protected RootMotionParams rootMotionParams;
         protected Vector3 animRootMotionVelocity;
@@ -201,7 +210,7 @@ namespace GameplayFramework
 
             if(!rootMotionParams.HasRootMotion)
             {
-                CalcVelocity(deltaTime, groundFriction, brakingDecelerationWalking);
+                CalcVelocity(deltaTime, groundFriction, GetMaxBrakingDeceleration());
             }
 
             ApplyRootMotionToVelocity();
@@ -220,7 +229,7 @@ namespace GameplayFramework
         protected virtual void PhysFalling(float deltaTime)
         {
 
-            CalcVelocity(deltaTime, 0.2f, 0.1f);
+            CalcVelocity(deltaTime, fallingLateralFriction, GetMaxBrakingDeceleration());
 
             Vector3 gravity = Physics.gravity * gravityScale;
             float gravityTime = deltaTime;
@@ -362,6 +371,19 @@ namespace GameplayFramework
             }
         }
 
+        protected virtual float GetMaxBrakingDeceleration()
+        {
+            switch (movementMode)
+            {
+                case MovementMode.Walking:
+                    return brakingDecelerationWalking;
+                case MovementMode.Falling:
+                    return brakingDecelerationFalling;
+                case MovementMode.None:
+                default:
+                    return 0f;
+            }
+        }
 
         /// <summary>
         /// Applies the braking to the velocity

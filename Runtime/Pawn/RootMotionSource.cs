@@ -1,62 +1,65 @@
-using GameplayFramework;
 using UnityEngine;
 
-public struct RootMotionParams
+namespace GameplayFramework
 {
-    public Vector3 translation;
-    public Quaternion rotation;
 
-    public bool HasRootMotion => translation != Vector3.zero || rotation != Quaternion.identity;
-
-    public void Accumulate(RootMotionParams rootMotionParams)
+    public struct RootMotionParams
     {
-        translation += rootMotionParams.translation;
-        rotation *= rootMotionParams.rotation;
-    }
+        public Vector3 translation;
+        public Quaternion rotation;
 
-    public void Clear()
-    {
-        translation = Vector3.zero;
-        rotation = Quaternion.identity;
-    }
-}
+        public bool HasRootMotion => translation != Vector3.zero || rotation != Quaternion.identity;
 
-[RequireComponent(typeof(Animator))]
-public class RootMotionSource : GameplayObject
-{
-    Character characterOwner;
-    Animator animator;
-    Vector3 acumulatedPosition;
-    Quaternion acumulatedRotation = Quaternion.identity;
-
-    private void Awake()
-    {
-        animator = GetComponent<Animator>();
-    }
-
-    public override void SetOwner(GameplayObject obj)
-    {
-        base.SetOwner(obj);
-        characterOwner = (Character)obj;
-    }
-
-    private void OnAnimatorMove()
-    {
-        acumulatedPosition += animator.deltaPosition;
-        acumulatedRotation *= animator.deltaRotation;
-    }
-
-    public RootMotionParams ConsumeRootMotion()
-    {
-        var rootMotion = new RootMotionParams()
+        public void Accumulate(RootMotionParams rootMotionParams)
         {
-            translation = acumulatedPosition,
-            rotation = acumulatedRotation
-        };
+            translation += rootMotionParams.translation;
+            rotation *= rootMotionParams.rotation;
+        }
 
-        acumulatedPosition = Vector3.zero;
-        acumulatedRotation = Quaternion.identity;
+        public void Clear()
+        {
+            translation = Vector3.zero;
+            rotation = Quaternion.identity;
+        }
+    }
 
-        return rootMotion;
+    [RequireComponent(typeof(Animator))]
+    public class RootMotionSource : GameplayObject
+    {
+        Character characterOwner;
+        Animator animator;
+        Vector3 acumulatedPosition;
+        Quaternion acumulatedRotation = Quaternion.identity;
+
+        private void Awake()
+        {
+            animator = GetComponent<Animator>();
+        }
+
+        public override void SetOwner(GameplayObject obj)
+        {
+            base.SetOwner(obj);
+            characterOwner = (Character)obj;
+        }
+
+        private void OnAnimatorMove()
+        {
+            acumulatedPosition += animator.deltaPosition;
+            acumulatedRotation *= animator.deltaRotation;
+        }
+
+        public RootMotionParams ConsumeRootMotion()
+        {
+            var rootMotion = new RootMotionParams()
+            {
+                translation = acumulatedPosition,
+                rotation = acumulatedRotation
+            };
+
+            acumulatedPosition = Vector3.zero;
+            acumulatedRotation = Quaternion.identity;
+
+            return rootMotion;
+        }
     }
 }
