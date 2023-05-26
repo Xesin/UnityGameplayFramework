@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace GameplayFramework
@@ -26,11 +27,15 @@ namespace GameplayFramework
         private CharacterController characterController;
         private Character characterOwner;
 
+        protected RootMotionSource rootMotionComponent;
         protected MovementMode movementMode = MovementMode.Walking;
+        protected RootMotionParams rootMotionParams;
+        protected Vector3 animRootMotionVelocity;
 
         protected override void Awake()
         {
             characterController = GetComponent<CharacterController>();
+            rootMotionComponent = GetComponentInChildren<RootMotionSource>();
         }
 
         protected override void LateUpdate()
@@ -111,10 +116,58 @@ namespace GameplayFramework
         {
             characterOwner.ClearJumpInput(deltaTime);
 
+            if (rootMotionComponent)
+            {
+                RootMotionParams rootMotion = rootMotionComponent.ConsumeRootMotion();
+                if (rootMotion.HasRootMotion)
+                {
+                    rootMotionParams.Accumulate(rootMotion);
+                }
+            }
+
+            if (rootMotionParams.HasRootMotion)
+            {
+                animRootMotionVelocity = CalcAnimRootMotionVelocity(rootMotionParams.translation, deltaTime, velocity);
+            }
+
             StartNewPhysics(deltaTime);
 
-            PhysicsRotation(deltaTime);
+            if(!rootMotionParams.HasRootMotion)
+                PhysicsRotation(deltaTime);
 
+            // Root motion has been used, clear it
+            rootMotionParams.Clear();
+        }
+
+        private void ApplyRootMotionToVelocity()
+        {
+            if(rootMotionParams.HasRootMotion)
+            {
+                velocity = ConstrainAnimRootMotionVelocity(animRootMotionVelocity, velocity);
+            }
+        }
+
+        private Vector3 ConstrainAnimRootMotionVelocity(Vector3 rootMotionVelocity, Vector3 currentVelocity)
+        {
+            Vector3 result = rootMotionVelocity;
+            if(IsFalling())
+            {
+                result.y = currentVelocity.y;
+            }
+
+            return result;
+        }
+
+        private Vector3 CalcAnimRootMotionVelocity(Vector3 translation, float deltaTime, Vector3 velocity)
+        {
+            if (deltaTime > 0)
+            {
+                return translation / deltaTime;
+            }
+            else
+            {
+                return velocity;
+            }
         }
 
         protected virtual void StartNewPhysics(float deltaTime)
@@ -138,11 +191,21 @@ namespace GameplayFramework
         /// <param name="deltaTime"></param>
         protected virtual void PhysWalking(float deltaTime)
         {
-            Vector3 oldVelocity = velocity;
-            Vector3 oldLocation = transform.position;
+            if(!characterOwner || (!characterOwner.Controller && !rootMotionParams.HasRootMotion))
+            {
+                acceleration = Vector3.zero;
+                velocity = Vector3.zero;
+            }
 
             acceleration.y = 0;
-            CalcVelocity(deltaTime, groundFriction, brakingDecelerationWalking);
+
+            if(!rootMotionParams.HasRootMotion)
+            {
+                CalcVelocity(deltaTime, groundFriction, brakingDecelerationWalking);
+            }
+
+            ApplyRootMotionToVelocity();
+
             Vector3 moveVelocity = velocity;
 
             MoveAlongFloor(moveVelocity, deltaTime);

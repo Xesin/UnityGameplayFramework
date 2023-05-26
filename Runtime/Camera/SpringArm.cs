@@ -1,11 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace GameplayFramework
 {
     [ExecuteInEditMode]
-    public class SpringArm : GameplayObject
+    public class SpringArm : SceneObject
     {
         public float armLength = 1.4f;
         public bool useControlRotation = true;
@@ -15,12 +14,12 @@ namespace GameplayFramework
 
         private void Awake()
         {
-            foreach(Transform t in transform)
+            foreach (Transform t in transform)
             {
                 SetupAttachment(t);
             }
 
-            if(useAbsoluteRotation)
+            if (useAbsoluteRotation)
             {
                 SetAbsoluteRotation(transform.rotation);
             }
@@ -35,9 +34,9 @@ namespace GameplayFramework
                     transform.rotation = Quaternion.Euler(pawn.GetControlRotation());
                 }
             }
-            else if(useAbsoluteRotation)
+            else if (useAbsoluteRotation)
             {
-                if(Application.isPlaying)
+                if (Application.isPlaying)
                     transform.rotation = absoluteRotation;
             }
 
@@ -51,7 +50,7 @@ namespace GameplayFramework
 
         public void SetupAttachment(Transform child)
         {
-            if(!attachedObjects.Contains(child))
+            if (!attachedObjects.Contains(child))
             {
                 attachedObjects.Add(child);
             }
