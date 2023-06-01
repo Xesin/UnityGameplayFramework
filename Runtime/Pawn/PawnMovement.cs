@@ -1,9 +1,9 @@
 using GameplayFramework;
 using UnityEngine;
 
-public class PawnMovement : GameplayObject
+public abstract class PawnMovement : GameplayObject
 {
-    protected Pawn pawnOwner;
+    protected Character characterOwner;
 
     protected Vector3 acceleration;
     protected Vector3 velocity;
@@ -17,6 +17,14 @@ public class PawnMovement : GameplayObject
     {
     }
 
+    public virtual bool HasValidData()
+    {
+        bool isValid = characterOwner;
+
+
+        return isValid;
+    }
+
     /// <summary>
     /// Sets the owner of a gameplay object as a pawn.
     /// </summary>
@@ -24,7 +32,7 @@ public class PawnMovement : GameplayObject
     public override void SetOwner(GameplayObject obj)
     {
         base.SetOwner(obj);
-        pawnOwner = obj as Pawn;
+        characterOwner = obj as Character;
     }
 
     /// <summary>
@@ -36,7 +44,7 @@ public class PawnMovement : GameplayObject
     /// </returns>
     protected Vector3 ConsumeInputVector()
     {
-        return pawnOwner ? pawnOwner.Internal_ConsumeInputVector() : Vector3.zero;
+        return characterOwner ? characterOwner.Internal_ConsumeInputVector() : Vector3.zero;
     }
 
     /// <summary>
