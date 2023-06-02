@@ -1,5 +1,4 @@
 using System;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace GameplayFramework
@@ -18,9 +17,16 @@ namespace GameplayFramework
         // True when sweep test fails to find a walkable floor
         public bool lineTrace;
 
+        public bool walkableFloor;
+
         public float floorDistance;
 
         public RaycastHit hitResult;
+
+        public bool IsWalkableFloor()
+        {
+            return blockingHit && walkableFloor;
+        }
     }
 
     [RequireComponent(typeof(CharacterController))]
@@ -52,10 +58,12 @@ namespace GameplayFramework
         protected RootMotionSource rootMotionComponent;
 
         protected MovementMode movementMode = MovementMode.Walking;
-        protected RootMotionParams rootMotionParams;
-        protected Vector3 animRootMotionVelocity;
-        protected FindFloorResult currentFloor;
-        protected bool forceFloorCheck;
+        protected RootMotionParams rootMotionParams = default;
+        protected Vector3 animRootMotionVelocity = Vector3.zero;
+        protected Vector3 decayingFormerBaseVelocity = Vector3.zero;
+
+        protected FindFloorResult currentFloor = default;
+        protected bool forceFloorCheck = false;
 
         protected override void Awake()
         {
@@ -161,7 +169,7 @@ namespace GameplayFramework
 
             StartNewPhysics(deltaTime);
 
-            if(!rootMotionParams.HasRootMotion)
+            if (!rootMotionParams.HasRootMotion)
                 PhysicsRotation(deltaTime);
 
             // Root motion has been used, clear it
@@ -170,16 +178,20 @@ namespace GameplayFramework
 
         private void ApplyRootMotionToVelocity()
         {
-            if(rootMotionParams.HasRootMotion)
+            if (rootMotionParams.HasRootMotion)
             {
                 velocity = ConstrainAnimRootMotionVelocity(animRootMotionVelocity, velocity);
+                if (IsFalling())
+                {
+                    velocity += new Vector3(decayingFormerBaseVelocity.x, 0, decayingFormerBaseVelocity.z);
+                }
             }
         }
 
         private Vector3 ConstrainAnimRootMotionVelocity(Vector3 rootMotionVelocity, Vector3 currentVelocity)
         {
             Vector3 result = rootMotionVelocity;
-            if(IsFalling())
+            if (IsFalling())
             {
                 result.y = currentVelocity.y;
             }
@@ -220,17 +232,18 @@ namespace GameplayFramework
         /// <param name="deltaTime"></param>
         protected virtual void PhysWalking(float deltaTime)
         {
-            if(!characterOwner || (!characterOwner.Controller && !rootMotionParams.HasRootMotion))
+            if (!characterOwner || (!characterOwner.Controller && !rootMotionParams.HasRootMotion))
             {
                 acceleration = Vector3.zero;
                 velocity = Vector3.zero;
             }
 
             FindFloorResult oldFloor = currentFloor;
+            Vector3 oldLocation = transform.position;
 
             acceleration.y = 0;
 
-            if(!rootMotionParams.HasRootMotion)
+            if (!rootMotionParams.HasRootMotion)
             {
                 CalcVelocity(deltaTime, groundFriction, GetMaxBrakingDeceleration());
             }
@@ -238,27 +251,66 @@ namespace GameplayFramework
             ApplyRootMotionToVelocity();
 
             Vector3 moveVelocity = velocity;
+            Vector3 delta = deltaTime * moveVelocity;
 
             MoveAlongFloor(moveVelocity, deltaTime);
 
-            if (!characterController.isGrounded)
+            //if (!characterController.isGrounded)
+            //{
+            //    SetMovementMode(MovementMode.Falling);
+            //}
+
+            FindFloor(out currentFloor);
+
+            if (!currentFloor.IsWalkableFloor())
+            {
+                CheckFall(delta, oldLocation, deltaTime, true);
+            }
+        }
+
+        protected virtual bool CheckFall(Vector3 delta, Vector3 oldLocation, float deltaTime, bool mustJump)
+        {
+            if (!HasValidData()) return false;
+
+            if (mustJump)
+            {
+                if (IsMovingOnGround())
+                {
+                    StartFalling(deltaTime, delta, oldLocation);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        protected virtual void StartFalling(float deltaTime, Vector3 delta, Vector3 oldLocation)
+        {
+            float desiredDist = delta.magnitude;
+            Vector3 distance = (transform.position - oldLocation);
+            float actualDist = new Vector2(distance.x, distance.z).magnitude;
+
+            if (IsMovingOnGround())
             {
                 SetMovementMode(MovementMode.Falling);
             }
 
-            FindFloor(out currentFloor);
+            StartNewPhysics(deltaTime);
         }
 
         protected virtual void PhysFalling(float deltaTime)
         {
-            Vector3 oldVelocityWithRootMotion = velocity;
             Vector3 oldVelocity = velocity;
             Vector3 fallAcceleration = GetFallingLateralAcceleration(deltaTime);
             fallAcceleration.y = 0;
+
+            // Apply input
             if (!rootMotionParams.HasRootMotion)
             {
+                // store the original acceleration to restore it later
                 Vector3 restoreAccel = acceleration;
                 acceleration = fallAcceleration;
+
                 velocity.y = 0;
                 CalcVelocity(deltaTime, fallingLateralFriction, GetMaxBrakingDeceleration());
                 acceleration = restoreAccel;
@@ -290,7 +342,7 @@ namespace GameplayFramework
             ApplyRootMotionToVelocity();
 
             // Compute change in position(using midpoint integration method).
-            Vector3 Adjusted = 0.5f * (oldVelocityWithRootMotion + velocity) * deltaTime;
+            Vector3 Adjusted = 0.5f * (oldVelocity + velocity) * deltaTime;
 
             // Special handling if ending the jump force where we didn't apply gravity during the jump.
             if (endingJumpForce && !applyGravityWhileJumping)
@@ -298,22 +350,28 @@ namespace GameplayFramework
                 // We had a portion of the time at constant speed then a portion with acceleration due to gravity.
                 // Account for that here with a more correct change in position.
                 float NonGravityTime = Mathf.Max(0, deltaTime - gravityTime);
-                Adjusted = (oldVelocityWithRootMotion * NonGravityTime) + (0.5f * (velocity) * gravityTime);
+                Adjusted = (oldVelocity * NonGravityTime) + (0.5f * (velocity) * gravityTime);
             }
 
             characterController.Move(Adjusted);
             //characterController.SimpleMove(new Vector3(Adjusted.x, 0, Adjusted.z));
-            if (characterController.isGrounded)
+            if(characterController.collisionFlags.HasFlag(CollisionFlags.Below)) 
             {
-                SetMovementMode(MovementMode.Walking);
-            }
+                FindFloor(out currentFloor);
+
+                if (currentFloor.IsWalkableFloor())
+                {
+                    SetMovementMode(MovementMode.Walking);
+                    StartNewPhysics(deltaTime);
+                }
+            }            
         }
 
         public virtual Vector3 GetFallingLateralAcceleration(float deltaTime)
         {
             Vector3 fallAcceleration = new Vector3(acceleration.x, 0, acceleration.z);
 
-            if(!rootMotionParams.HasRootMotion && fallAcceleration.sqrMagnitude > 0)
+            if (!rootMotionParams.HasRootMotion && fallAcceleration.sqrMagnitude > 0)
             {
                 fallAcceleration = GetAirControl(deltaTime, airControl, fallAcceleration);
                 fallAcceleration = Vector3.ClampMagnitude(fallAcceleration, GetMaxAcceleration());
@@ -382,9 +440,63 @@ namespace GameplayFramework
 
         protected virtual void MoveAlongFloor(Vector3 inVelocity, float deltaTime)
         {
-            Vector3 delta = new Vector3(inVelocity.x, -0.5f, inVelocity.z);
-            
-            characterController.Move(delta * deltaTime);
+            if (!currentFloor.IsWalkableFloor())
+            {
+                return;
+            }
+
+            Vector3 delta = new Vector3(inVelocity.x, 0, inVelocity.z) * deltaTime;
+            if (Mathf.Abs(delta.magnitude) > 0.01f)
+            {
+                Debug.Log("Moving");
+            }
+            Vector3 rampVector = ComputeGroundMovementDelta(delta, currentFloor.hitResult, currentFloor.lineTrace);
+
+            characterController.Move(rampVector);
+            FindFloorResult floor;
+            FindFloor(out floor);
+
+            if (floor.IsWalkableFloor())
+            {
+                characterController.Move(new Vector3(0, -floor.floorDistance, 0));
+            }
+        }
+
+        public virtual bool IsWalkable(RaycastHit hit)
+        {
+            if (hit.collider == null)
+                return false;
+
+            // Don't walk over vertical surfaces
+            if (hit.normal.y < 1.0E-4f)
+            {
+                return false;
+            }
+
+            if (Vector3.Angle(Vector3.up, hit.normal) > characterController.slopeLimit)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        protected virtual Vector3 ComputeGroundMovementDelta(Vector3 delta, RaycastHit rampHit, bool hitFromLineTrace)
+        {
+
+            Vector3 FloorNormal = rampHit.normal;
+            //Vector3 ContactNormal = rampHit.Normal;
+
+            if (FloorNormal.y < (1.0f - 1.0E-4f) && FloorNormal.y > 1.0E-4f && !hitFromLineTrace && IsWalkable(rampHit))
+            {
+                // Compute a vector that moves parallel to the surface, by projecting the horizontal movement direction onto the ramp.
+                float FloorDotDelta = Vector3.Dot(FloorNormal, delta);
+                Vector3 RampMovement = new Vector3(delta.x, -FloorDotDelta / FloorNormal.y, delta.z);
+
+                return RampMovement;
+            }
+
+            return delta;
         }
 
         /// <summary>
@@ -512,31 +624,33 @@ namespace GameplayFramework
         {
             floorResult = default;
 
-            if (characterController.isGrounded)
+            // Set the downward direction for the sweep test
+            Vector3 sweepDirection = Vector3.down;
+
+            Vector3 sweepStart = characterController.transform.position + characterController.center - Vector3.up * (characterController.height * 0.5f - characterController.radius / 2);
+            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth);
+            float sweepRadius = Mathf.Max(0.02f, characterController.radius / 2f);
+            // Perform the sweep test
+            if (Physics.CapsuleCast(sweepStart, sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
             {
-                // Set the downward direction for the sweep test
-                Vector3 sweepDirection = Vector3.down;
+                floorResult.hitResult = hitInfo;
+                floorResult.blockingHit = true;
+                floorResult.floorDistance = hitInfo.distance;
+                floorResult.walkableFloor = true;
 
-                Vector3 sweepStart = characterController.transform.position + characterController.center - Vector3.up * (characterController.height * 0.5f - characterController.radius);
-                float sweepDistance = characterController.height * 0.5f + characterController.skinWidth;
-
-                // Perform the sweep test
-                if (Physics.CapsuleCast(sweepStart, sweepStart, characterController.radius, sweepDirection, out var hitInfo, sweepDistance))
-                {
-                    floorResult.hitResult = hitInfo;
-                    floorResult.blockingHit = true;
-                    floorResult.floorDistance = hitInfo.distance;
-
-                    GameObject groundedObject = hitInfo.collider.gameObject;
-                    // Do something with the grounded object
-                    Debug.Log("Grounded on: " + groundedObject.name);
-                }
-                else
-                {
-                    floorResult.lineTrace = true;
-                }
+                GameObject groundedObject = hitInfo.collider.gameObject;
+                // Do something with the grounded object
+                Debug.Log("Grounded on: " + groundedObject.name);
             }
+            else
+            {
+                // TODO: Do a linetrace to do an extra check
+                floorResult.blockingHit = false;
+                floorResult.walkableFloor = false;
+                floorResult.floorDistance = Mathf.Infinity;
 
+                //floorResult.lineTrace = true;
+            }
         }
     }
 }
