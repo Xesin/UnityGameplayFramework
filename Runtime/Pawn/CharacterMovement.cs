@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     public enum MovementMode
     {

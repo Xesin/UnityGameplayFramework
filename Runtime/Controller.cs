@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     public class Controller : GameplayObject
     {

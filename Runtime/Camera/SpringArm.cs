@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     [ExecuteInEditMode]
     public class SpringArm : SceneObject

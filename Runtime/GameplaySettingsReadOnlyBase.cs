@@ -1,7 +1,7 @@
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     public class GameplaySettingsReadOnlyBase : ScriptableObject
     {

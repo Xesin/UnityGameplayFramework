@@ -4,7 +4,7 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     [CreateAssetMenu(fileName = "GameplaySettings.asset", menuName = "Gameplay/Settings")]
     public class GameplayGlobalSettings : ScriptableObject

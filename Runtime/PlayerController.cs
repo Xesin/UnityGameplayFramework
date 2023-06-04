@@ -1,8 +1,8 @@
-using GameplayFramework.Input;
+using Xesin.GameplayFramework.Input;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     [RequireComponent(typeof(InputComponent))]
     public class PlayerController : Controller

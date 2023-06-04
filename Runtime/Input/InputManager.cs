@@ -4,11 +4,11 @@ using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
-using UnityEngine.ResourceManagement.Util;
+using Xesin.GameplayFramework.Utils;
 
-namespace GameplayFramework.Input
+namespace Xesin.GameplayFramework.Input
 {
-    public class InputManager : ComponentSingleton<InputManager>
+    public class InputManager : MonoSingleton<InputManager>
     {
         private const int MAX_PLAYERS = 2;
 

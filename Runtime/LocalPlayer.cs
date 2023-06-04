@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
 
     [RequireComponent(typeof(InputSystemUIInputModule), typeof(MultiplayerEventSystem), typeof(PlayerInput))]

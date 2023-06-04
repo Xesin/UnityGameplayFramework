@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-namespace GameplayFramework.Input
+namespace Xesin.GameplayFramework.Input
 {
 
     public class InputComponent : MonoBehaviour

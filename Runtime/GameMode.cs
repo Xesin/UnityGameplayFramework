@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.ResourceManagement.Util;
+using Xesin.GameplayFramework.Utils;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
 
-    public class GameMode : ComponentSingleton<GameMode>
+    public class GameMode : MonoSingleton<GameMode>
     {
         [field: SerializeField]
         public Pawn pawnPrefab { get; private set; }

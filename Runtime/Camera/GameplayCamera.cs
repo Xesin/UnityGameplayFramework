@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     [RequireComponent(typeof(Camera))]
     public class GameplayCamera : GameplayObject

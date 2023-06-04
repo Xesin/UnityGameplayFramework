@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.ResourceManagement.ResourceProviders.Simulation;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     public abstract class GameplayObject : MonoBehaviour
     {

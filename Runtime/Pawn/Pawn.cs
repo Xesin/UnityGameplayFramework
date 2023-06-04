@@ -1,7 +1,7 @@
-using GameplayFramework.Input;
 using UnityEngine;
+using Xesin.GameplayFramework.Input;
 
-namespace GameplayFramework
+namespace Xesin.GameplayFramework
 {
     [RequireComponent(typeof(PawnMovement))]
     public class Pawn : GameplayObject
@@ -77,9 +77,9 @@ namespace GameplayFramework
             currentController = controller;
             if (controller is PlayerController playerController)
             {
-                SetupPlayerInput(playerController.GetInputComponent());   
+                SetupPlayerInput(playerController.GetInputComponent());
             }
-            if(pawnCamera)
+            if (pawnCamera)
             {
                 pawnCamera.enabled = true;
             }
@@ -89,7 +89,7 @@ namespace GameplayFramework
         {
             RecalculateBaseEyeHeight();
             Internal_ConsumeInputVector();
-            if(pawnCamera && !Controller)
+            if (pawnCamera && !Controller)
             {
                 pawnCamera.enabled = false;
             }

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.ResourceManagement.Util;
-using GameplayFramework;
+using Xesin.GameplayFramework;
+using Xesin.GameplayFramework.Utils;
 
-public class ViewportSubsystem : ComponentSingleton<ViewportSubsystem>
+public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
 {
     private Dictionary<LocalPlayer, UIViewport> playerViewports = new Dictionary<LocalPlayer, UIViewport>();
     private UIViewport screenViewport;

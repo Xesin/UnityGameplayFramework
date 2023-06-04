@@ -1,5 +1,5 @@
 using UnityEngine;
-using GameplayFramework;
+using Xesin.GameplayFramework;
 
 [RequireComponent(typeof(Canvas))]
 public class UIViewport : MonoBehaviour
