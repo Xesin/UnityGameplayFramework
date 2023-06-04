@@ -139,10 +139,20 @@ namespace GameplayFramework
 
         public virtual void SetMovementMode(MovementMode movementMode)
         {
+            if (movementMode == this.movementMode) return;
+
             var prevMovementMode = movementMode;
             this.movementMode = movementMode;
 
-            if(movementMode == MovementMode.Walking)
+            OnMovementModeChange(prevMovementMode);
+            characterOwner.OnMovementModeChanged(prevMovementMode);
+        }
+
+        protected virtual void OnMovementModeChange(MovementMode previousMovementMode)
+        {
+            if (!HasValidData()) return;
+
+            if (movementMode == MovementMode.Walking)
             {
                 // Walking uses only XY velocity, and must be on a walkable floor, with a Base.
                 velocity.y = 0;
@@ -151,12 +161,64 @@ namespace GameplayFramework
                 FindFloor(out currentFloor);
                 //AdjustFloorHeight();
                 SetBaseFromFloor(currentFloor);
-            }else
+            }
+            else
             {
+                currentFloor.Clear();
+
+                if(movementMode == MovementMode.Falling)
+                {
+                    decayingFormerBaseVelocity = GetImpartedMovementBaseVelocity();
+                    velocity += decayingFormerBaseVelocity;
+
+                    decayingFormerBaseVelocity = Vector3.zero;
+                }
+                
                 SetBase(null);
             }
+        }
 
-            characterOwner.OnMovementModeChanged(prevMovementMode);
+        private Vector3 GetImpartedMovementBaseVelocity()
+        {
+            Vector3 result = Vector3.zero;
+
+            if(characterOwner)
+            {
+                Transform movementBase = characterOwner.GetMovementBase();
+                if(movementBase && !movementBase.gameObject.isStatic)
+                {
+                    Vector3 baseVelocity = Vector3.zero;
+                    if(movementBase.TryGetComponent<Rigidbody>(out var rigidbody) && !rigidbody.isKinematic)
+                    {
+                        baseVelocity = rigidbody.velocity;
+
+                        Vector3 characterBasePosition = transform.position + characterController.center - ( new Vector3(0, characterController.height * 0.5f, 0));
+                        Vector3 baseTangentialVelocity = GetMovementBaseTangentialVelocity(rigidbody, characterBasePosition);
+
+                        baseVelocity += baseTangentialVelocity;
+                    }
+                    else if(movementBase.TryGetComponent<GameplayObject>(out var component))
+                    {
+                        baseVelocity += component.Velocity;
+                    }
+
+                    result = baseVelocity;
+                }
+            }
+
+            return result;
+        }
+
+        private Vector3 GetMovementBaseTangentialVelocity(Rigidbody movementBase, Vector3 worldLocation)
+        {
+            Vector3 baseAngleVelocity = movementBase.angularVelocity;
+            Vector3 baseLocation = movementBase.position;
+            Quaternion baseRotation = movementBase.rotation;
+
+            Vector3 radialDistanceToBase = worldLocation - baseLocation;
+            Vector3 tangentialVelocity = Vector3.Cross(baseAngleVelocity, radialDistanceToBase);
+
+            return tangentialVelocity;
         }
 
         private void SetBaseFromFloor(FindFloorResult floor)
@@ -410,7 +472,7 @@ namespace GameplayFramework
 
             accumulatedMovement += Adjusted;
             //characterController.SimpleMove(new Vector3(Adjusted.x, 0, Adjusted.z));
-            if(characterController.collisionFlags.HasFlag(CollisionFlags.Below)) 
+            if(characterController.collisionFlags.HasFlag(CollisionFlags.Below) && !characterOwner.wasJumping) 
             {
                 FindFloor(out currentFloor);
 
@@ -566,7 +628,6 @@ namespace GameplayFramework
             
             if(!movementBase)
             {
-                Debug.Log("Not based");
                 SetBase(null);
                 return;
             }
