@@ -27,6 +27,15 @@ namespace GameplayFramework
         {
             return blockingHit && walkableFloor;
         }
+
+        public void Clear()
+        {
+            hitResult = default;
+            walkableFloor = false;
+            lineTrace = false;
+            blockingHit = false;
+            floorDistance = Mathf.Infinity;
+        }
     }
 
     [RequireComponent(typeof(CharacterController))]
@@ -61,14 +70,24 @@ namespace GameplayFramework
         protected RootMotionParams rootMotionParams = default;
         protected Vector3 animRootMotionVelocity = Vector3.zero;
         protected Vector3 decayingFormerBaseVelocity = Vector3.zero;
+        protected Vector3 accumulatedMovement = Vector3.zero;
 
-        protected FindFloorResult currentFloor = default;
+        [NonSerialized]
+        public FindFloorResult currentFloor = default;
         protected bool forceFloorCheck = false;
+
+        protected Quaternion oldBaseRotation;
+        protected Vector3 oldBaseLocation;
 
         protected override void Awake()
         {
             characterController = GetComponent<CharacterController>();
             rootMotionComponent = GetComponentInChildren<RootMotionSource>();
+        }
+
+        private void Start()
+        {
+            SetMovementMode(MovementMode.Walking);
         }
 
         protected override void LateUpdate()
@@ -123,7 +142,33 @@ namespace GameplayFramework
             var prevMovementMode = movementMode;
             this.movementMode = movementMode;
 
+            if(movementMode == MovementMode.Walking)
+            {
+                // Walking uses only XY velocity, and must be on a walkable floor, with a Base.
+                velocity.y = 0;
+
+                // make sure we update our new floor/base on initial entry of the walking physics
+                FindFloor(out currentFloor);
+                //AdjustFloorHeight();
+                SetBaseFromFloor(currentFloor);
+            }else
+            {
+                SetBase(null);
+            }
+
             characterOwner.OnMovementModeChanged(prevMovementMode);
+        }
+
+        private void SetBaseFromFloor(FindFloorResult floor)
+        {
+            if(floor.IsWalkableFloor())
+            {
+                SetBase(floor.hitResult.collider.transform);
+            }
+            else
+            {
+                SetBase(null);
+            }
         }
 
         /// <summary>
@@ -165,6 +210,9 @@ namespace GameplayFramework
                 animRootMotionVelocity = CalcAnimRootMotionVelocity(rootMotionParams.translation, deltaTime, velocity);
             }
 
+            UpdateBasedMovement(deltaTime);            
+            SaveBaseLocation();
+
             characterOwner.ClearJumpInput(deltaTime);
 
             StartNewPhysics(deltaTime);
@@ -172,6 +220,8 @@ namespace GameplayFramework
             if (!rootMotionParams.HasRootMotion)
                 PhysicsRotation(deltaTime);
 
+            characterController.Move(accumulatedMovement);
+            accumulatedMovement = Vector3.zero;
             // Root motion has been used, clear it
             rootMotionParams.Clear();
         }
@@ -262,8 +312,13 @@ namespace GameplayFramework
 
             FindFloor(out currentFloor);
 
-            if (!currentFloor.IsWalkableFloor())
+            if (currentFloor.IsWalkableFloor())
             {
+                SetBase(currentFloor.hitResult.collider.transform);
+            }
+            else
+            {
+
                 CheckFall(delta, oldLocation, deltaTime, true);
             }
         }
@@ -353,7 +408,7 @@ namespace GameplayFramework
                 Adjusted = (oldVelocity * NonGravityTime) + (0.5f * (velocity) * gravityTime);
             }
 
-            characterController.Move(Adjusted);
+            accumulatedMovement += Adjusted;
             //characterController.SimpleMove(new Vector3(Adjusted.x, 0, Adjusted.z));
             if(characterController.collisionFlags.HasFlag(CollisionFlags.Below)) 
             {
@@ -446,19 +501,41 @@ namespace GameplayFramework
             }
 
             Vector3 delta = new Vector3(inVelocity.x, 0, inVelocity.z) * deltaTime;
-            if (Mathf.Abs(delta.magnitude) > 0.01f)
-            {
-                Debug.Log("Moving");
-            }
             Vector3 rampVector = ComputeGroundMovementDelta(delta, currentFloor.hitResult, currentFloor.lineTrace);
+            accumulatedMovement += rampVector;
 
-            characterController.Move(rampVector);
-            FindFloorResult floor;
-            FindFloor(out floor);
-
+            FindFloor(out var floor);
             if (floor.IsWalkableFloor())
+                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
+        }
+
+        public virtual void FindFloor(out FindFloorResult floorResult)
+        {
+            floorResult = default;
+
+            // Set the downward direction for the sweep test
+            Vector3 sweepDirection = Vector3.down;
+            Vector3 characterActualPosition = accumulatedMovement + characterController.transform.position;
+            float height = (characterController.height * 0.5f);
+            Vector3 sweepStart = characterActualPosition + characterController.center - Vector3.up * (height - characterController.radius);
+            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth);
+            float sweepRadius = Mathf.Max(0.02f, characterController.radius);
+            // Perform the sweep test
+            if (Physics.CapsuleCast(sweepStart, sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
             {
-                characterController.Move(new Vector3(0, -floor.floorDistance, 0));
+                floorResult.hitResult = hitInfo;
+                floorResult.blockingHit = true;
+                floorResult.floorDistance = hitInfo.point.y - (characterActualPosition.y - (characterController.height * 0.5f + characterController.skinWidth));
+                floorResult.walkableFloor = true;
+            }
+            else
+            {
+                // TODO: Do a linetrace to do an extra check
+                floorResult.blockingHit = false;
+                floorResult.walkableFloor = false;
+                floorResult.floorDistance = Mathf.Infinity;
+
+                //floorResult.lineTrace = true;
             }
         }
 
@@ -479,6 +556,68 @@ namespace GameplayFramework
             }
 
             return true;
+        }
+
+        protected virtual void UpdateBasedMovement(float deltaTime)
+        {
+            if (!HasValidData()) return;
+
+            Transform movementBase = characterOwner.GetMovementBase();
+            
+            if(!movementBase)
+            {
+                Debug.Log("Not based");
+                SetBase(null);
+                return;
+            }
+
+            Quaternion deltaRotation = Quaternion.identity;
+            Vector3 deltaPosition;
+
+            Quaternion newBaseRotation = movementBase.rotation;
+            Vector3 newBaseLocation = movementBase.position;
+
+            bool rotationChanged = Quaternion.Angle(oldBaseRotation, newBaseRotation) > 1.0E-8f;
+
+            if (rotationChanged)
+            {
+                deltaRotation = newBaseRotation * Quaternion.Inverse(oldBaseRotation);
+            }
+
+            if(rotationChanged || oldBaseLocation != newBaseLocation)
+            {
+                var oldLocalToWorldMatrix = Matrix4x4.TRS(oldBaseLocation, oldBaseRotation, Vector3.one);
+                var newLocalToWorldMatrix = Matrix4x4.TRS(newBaseLocation, newBaseRotation, Vector3.one);
+
+                Quaternion finalQuaternion = transform.rotation;
+
+                if(rotationChanged)
+                {
+
+                }
+
+                float halfHeight = characterController.height / 2f;
+                float radius = characterController.radius;
+
+                Vector3 baseOffset = new Vector3(0, halfHeight, 0);
+                Vector3 offsetPosition = transform.position - baseOffset;
+                Vector4 localBasePos = oldLocalToWorldMatrix.inverse * new Vector4(offsetPosition.x, offsetPosition.y, offsetPosition.z, 1);
+                Vector4 localToWorlPos = newLocalToWorldMatrix * localBasePos;
+                Vector3 newWorldPosition = new Vector3(localToWorlPos.x, localToWorlPos.y, localToWorlPos.z) + baseOffset;
+
+                deltaPosition = newWorldPosition - transform.position;
+
+                accumulatedMovement += deltaPosition;
+                transform.rotation = finalQuaternion * deltaRotation;
+            }
+        }
+
+        private void SetBase(Transform movementBase)
+        {
+            if(characterOwner)
+            {
+                characterOwner.SetBase(movementBase);
+            }
         }
 
         protected virtual Vector3 ComputeGroundMovementDelta(Vector3 delta, RaycastHit rampHit, bool hitFromLineTrace)
@@ -620,36 +759,16 @@ namespace GameplayFramework
             return movementMode == MovementMode.Falling;
         }
 
-        public virtual void FindFloor(out FindFloorResult floorResult)
+        public virtual void SaveBaseLocation()
         {
-            floorResult = default;
+            if (!HasValidData()) return;
 
-            // Set the downward direction for the sweep test
-            Vector3 sweepDirection = Vector3.down;
+            Transform movementBase = characterOwner.GetMovementBase();
 
-            Vector3 sweepStart = characterController.transform.position + characterController.center - Vector3.up * (characterController.height * 0.5f - characterController.radius / 2);
-            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth);
-            float sweepRadius = Mathf.Max(0.02f, characterController.radius / 2f);
-            // Perform the sweep test
-            if (Physics.CapsuleCast(sweepStart, sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
+            if(movementBase)
             {
-                floorResult.hitResult = hitInfo;
-                floorResult.blockingHit = true;
-                floorResult.floorDistance = hitInfo.distance;
-                floorResult.walkableFloor = true;
-
-                GameObject groundedObject = hitInfo.collider.gameObject;
-                // Do something with the grounded object
-                Debug.Log("Grounded on: " + groundedObject.name);
-            }
-            else
-            {
-                // TODO: Do a linetrace to do an extra check
-                floorResult.blockingHit = false;
-                floorResult.walkableFloor = false;
-                floorResult.floorDistance = Mathf.Infinity;
-
-                //floorResult.lineTrace = true;
+                oldBaseLocation = movementBase.transform.position;
+                oldBaseRotation = movementBase.transform.rotation;
             }
         }
     }

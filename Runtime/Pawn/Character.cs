@@ -1,4 +1,6 @@
 using GameplayFramework;
+using PlasticPipe.PlasticProtocol.Server;
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterMovement))]
@@ -13,6 +15,9 @@ public class Character : Pawn
     public int jumpCurrentCount = 0;
     public int jumpCurrentCountPreJump = 0;
     public float jumpForceTimeRemaining = 0f;
+
+    // The object we are walking on
+    private Transform baseObject;
 
     private CharacterMovement characterMovement;
 
@@ -157,5 +162,44 @@ public class Character : Pawn
     protected virtual float GetJumpMaxHoldTime()
     {
         return jumpMaxHoldTime;
+    }
+
+    public virtual void SetBase(Transform newBase)
+    {
+        bool baseChanged = newBase != baseObject;
+
+        if(baseChanged)
+        {
+            //// TODO: Verify no recursion
+            //foreach(Transform child in newBase)
+            //{
+            //    if(child.gameObject == gameObject)
+            //    {
+            //        Debug.LogWarning("Set base failed! Recursion decected.");
+            //        return;
+            //    }
+
+            //}
+
+            baseObject = newBase;
+
+            if(characterMovement)
+            {
+                if(newBase)
+                {
+                    // Force base location and relative position to be computed since we have a new base or bone so the old relative offset is meaningless.
+                    characterMovement.SaveBaseLocation();
+                }
+                else
+                {
+                    characterMovement.currentFloor.Clear();
+                }
+            }
+        }
+    }
+
+    public virtual Transform GetMovementBase()
+    {
+        return baseObject;
     }
 }
