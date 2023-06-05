@@ -7,13 +7,20 @@ namespace Xesin.GameplayFramework
     public class SpringArm : SceneObject
     {
         public float armLength = 1.4f;
+        public bool traceCollision = true;
+        public bool traceIgnoresOwner = true;
+        public float traceRadius = 0.04f;
         public bool useControlRotation = true;
+        public Vector3 armOffset = Vector3.zero;
+        public LayerMask traceChannels = Physics.AllLayers;
+
 
         private List<Transform> attachedObjects = new List<Transform>();
         private Quaternion absoluteRotation = Quaternion.identity;
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             foreach (Transform t in transform)
             {
                 SetupAttachment(t);
@@ -24,6 +31,8 @@ namespace Xesin.GameplayFramework
                 SetAbsoluteRotation(transform.rotation);
             }
         }
+
+        RaycastHit[] raycastHits = new RaycastHit[2];
 
         private void LateUpdate()
         {
@@ -40,11 +49,27 @@ namespace Xesin.GameplayFramework
                     transform.rotation = absoluteRotation;
             }
 
-            Vector3 worldPosition = transform.position - transform.forward * armLength;
+            Vector3 armOrigin = transform.position + armOffset;
+            Vector3 armDirection = -transform.forward;
+            Vector3 newWorldPosition = armOrigin + armDirection * armLength;
+
+            if (traceCollision)
+            {
+                int hits = Physics.SphereCastNonAlloc(armOrigin, traceRadius, armDirection, raycastHits, armLength, traceChannels);
+                for (int i = 0; i < hits; i++)
+                {
+                    if (!traceIgnoresOwner || raycastHits[i].collider.gameObject != Owner.gameObject)
+                    {
+                        newWorldPosition = armOrigin + armDirection * raycastHits[i].distance;
+                        break;
+                    }
+                }
+
+            }
 
             for (int i = 0; i < attachedObjects.Count; i++)
             {
-                attachedObjects[i].position = worldPosition;
+                attachedObjects[i].position = newWorldPosition;
             }
         }
 
