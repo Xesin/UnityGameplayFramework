@@ -197,7 +197,7 @@ namespace Xesin.GameplayFramework
 
                         baseVelocity += baseTangentialVelocity;
                     }
-                    else if(movementBase.TryGetComponent<GameplayObject>(out var component))
+                    else if(movementBase.TryGetComponent<SceneObject>(out var component))
                     {
                         baseVelocity += component.Velocity;
                     }
@@ -471,7 +471,7 @@ namespace Xesin.GameplayFramework
             }
 
             accumulatedMovement += Adjusted;
-            //characterController.SimpleMove(new Vector3(Adjusted.x, 0, Adjusted.z));
+
             if(characterController.collisionFlags.HasFlag(CollisionFlags.Below) && !characterOwner.wasJumping) 
             {
                 FindFloor(out currentFloor);
@@ -480,6 +480,15 @@ namespace Xesin.GameplayFramework
                 {
                     SetMovementMode(MovementMode.Walking);
                     StartNewPhysics(deltaTime);
+                }
+                // Prevents sliding if we are too close to the edge
+                else
+                {
+                    FindFloor(out var edgeFloor, 1.0f);
+                    if(edgeFloor.blockingHit && !edgeFloor.lineTrace)
+                    {
+                        characterController.Move(edgeFloor.hitResult.normal * 1.5f * deltaTime); 
+                    }
                 }
             }            
         }
@@ -571,7 +580,7 @@ namespace Xesin.GameplayFramework
                 accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
         }
 
-        public virtual void FindFloor(out FindFloorResult floorResult)
+        public virtual void FindFloor(out FindFloorResult floorResult, float radiusScale = 0.5f)
         {
             floorResult = default;
 
@@ -580,25 +589,33 @@ namespace Xesin.GameplayFramework
             Vector3 characterActualPosition = accumulatedMovement + characterController.transform.position;
             float height = (characterController.height * 0.5f);
             Vector3 sweepStart = characterActualPosition + characterController.center - Vector3.up * (height - characterController.radius);
-            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth);
-            float sweepRadius = Mathf.Max(0.02f, characterController.radius);
+            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth + 0.05f);
+            float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
             // Perform the sweep test
-            if (Physics.CapsuleCast(sweepStart, sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
+            if (Physics.SphereCast(sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
             {
                 floorResult.hitResult = hitInfo;
                 floorResult.blockingHit = true;
                 floorResult.floorDistance = hitInfo.point.y - (characterActualPosition.y - (characterController.height * 0.5f + characterController.skinWidth));
                 floorResult.walkableFloor = true;
-            }
-            else
-            {
-                // TODO: Do a linetrace to do an extra check
-                floorResult.blockingHit = false;
-                floorResult.walkableFloor = false;
-                floorResult.floorDistance = Mathf.Infinity;
 
-                //floorResult.lineTrace = true;
+                return;
             }
+            else if(Physics.Raycast(sweepStart, sweepDirection, out hitInfo, sweepDistance))
+            {
+                floorResult.hitResult = hitInfo;
+                floorResult.blockingHit = true;
+                floorResult.floorDistance = hitInfo.point.y - (characterActualPosition.y - (characterController.height * 0.5f + characterController.skinWidth));
+                floorResult.walkableFloor = true;
+                floorResult.lineTrace = true;
+
+                return;
+            }
+
+            floorResult.blockingHit = false;
+            floorResult.walkableFloor = false;
+            floorResult.floorDistance = Mathf.Infinity;
+            floorResult.lineTrace = false;
         }
 
         public virtual bool IsWalkable(RaycastHit hit)
