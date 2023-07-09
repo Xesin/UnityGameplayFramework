@@ -53,7 +53,7 @@ namespace Xesin.GameplayFramework
             Vector3 armDirection = -transform.forward;
             Vector3 newWorldPosition = armOrigin + armDirection * armLength;
 
-            if (traceCollision)
+            if (traceCollision && Application.isPlaying)
             {
                 int hits = Physics.SphereCastNonAlloc(armOrigin, traceRadius, armDirection, raycastHits, armLength, traceChannels);
                 for (int i = 0; i < hits; i++)

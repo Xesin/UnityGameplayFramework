@@ -1,8 +1,8 @@
-using GameplayFramework.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Xesin.GameplayFramework.Input;
 
-namespace GameplayFramework.Samples
+namespace Xesin.GameplayFramework.Samples
 {
     public class SampleThirdPersonCharacter : Character
     {

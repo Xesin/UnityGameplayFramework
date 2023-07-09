@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace GameplayFramework.Samples
+namespace Xesin.GameplayFramework.Samples.HDRP
 {
     public class SceneInit : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace GameplayFramework.Samples
+namespace Xesin.GameplayFramework.Samples.HDRP
 {
     public class AnimatorProvider : GameplayObject
     {
