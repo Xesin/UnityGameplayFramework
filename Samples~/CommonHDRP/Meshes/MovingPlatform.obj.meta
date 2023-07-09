@@ -8,7 +8,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: MovingPlatformMat
-    second: {fileID: 2100000, guid: 046d63d2ab45d4a268ad613744852fc9, type: 2}
+    second: {fileID: 2100000, guid: b26e06d7e5394a74eb05bf33ce3ec161, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -20,6 +20,16 @@
       "displayName": "Third Person Game HDRP",
       "description": "This sample contains an example of a third person character using HDRP",
       "path": "Samples~/ThirdPersonHDRP"
+    },
+    {
+      "displayName": "Common sample assets Built-In",
+      "description": "Contains the common assets and scripts between all the Built-in renderer samples",
+      "path": "Samples~/CommonsampleassetsBuiltin"
+    },
+    {
+      "displayName": "Third Person Game Built-in",
+      "description": "This sample contains an example of a third person character using Built-in renderer",
+      "path": "Samples~/ThirdPersonGameBuiltin"
     }
   ]
 }
