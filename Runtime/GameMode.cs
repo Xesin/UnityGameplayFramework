@@ -21,6 +21,9 @@ namespace Xesin.GameplayFramework
 
         private bool isPaused = false;
 
+        private PlayerStart[] playerStarts;
+        private int lastPlayerStartIndex = -1;
+
         public virtual IEnumerator OnLevelReady()
         {
             Instantiate(screenViewport);
@@ -50,7 +53,19 @@ namespace Xesin.GameplayFramework
 
         protected virtual Pawn CreatePlayerPawn(PlayerController playerController)
         {
-            var pawn = Instantiate(pawnPrefab);
+            Vector3 spawnPosition = Vector3.zero;
+            Quaternion spawnOrientation = Quaternion.identity;
+
+            var spawnPoint = GetSpawnPoint();
+
+            if(spawnPoint)
+            {
+                spawnPosition = spawnPoint.position;
+                spawnOrientation = spawnPoint.rotation;
+            }
+
+            var pawn = Instantiate(pawnPrefab, spawnPosition, spawnOrientation);
+
             playerController.Posses(pawn);
             return pawn;
         }
@@ -116,6 +131,15 @@ namespace Xesin.GameplayFramework
             }
         }
 
+        public virtual Transform GetSpawnPoint()
+        {
+            if(playerStarts == null) playerStarts = FindObjectsOfType<PlayerStart>();
+            if (playerStarts.Length == 0) return null;
 
+
+            lastPlayerStartIndex = (lastPlayerStartIndex + 1) % playerStarts.Length;
+
+            return playerStarts[lastPlayerStartIndex].transform;
+        }
     }
 }

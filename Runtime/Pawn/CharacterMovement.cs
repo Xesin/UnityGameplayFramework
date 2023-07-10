@@ -586,11 +586,14 @@ namespace Xesin.GameplayFramework
 
             // Set the downward direction for the sweep test
             Vector3 sweepDirection = Vector3.down;
-            Vector3 characterActualPosition = characterController.transform.position;
+            Vector3 characterActualPosition = accumulatedMovement + characterController.transform.position;
             float height = (characterController.height * 0.5f);
             Vector3 sweepStart = characterActualPosition + (characterController.center - Vector3.up * (height - characterController.skinWidth));
             float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth + 0.05f);
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
+
+            Debug.DrawLine(sweepStart, sweepStart + sweepDirection * sweepDistance);
+
             // Perform the sweep test
             if (Physics.SphereCast(sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
             {
