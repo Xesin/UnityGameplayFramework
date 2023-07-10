@@ -83,6 +83,16 @@ namespace Xesin.GameplayFramework
             {
                 pawnCamera.enabled = true;
             }
+
+            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
+
+            for (int i = 0; i < gameplayComponents.Length; i++)
+            {
+                if (gameplayComponents[i] != this)
+                {
+                    gameplayComponents[i].SetOwner(this);
+                }
+            }
         }
 
         public virtual void Restart()

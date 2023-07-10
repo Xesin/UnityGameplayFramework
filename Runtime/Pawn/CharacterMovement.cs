@@ -30,6 +30,7 @@ namespace Xesin.GameplayFramework
 
         public void Clear()
         {
+            SkinnedMeshRenderer
             hitResult = default;
             walkableFloor = false;
             lineTrace = false;
