@@ -3,7 +3,6 @@ using Xesin.GameplayFramework.Input;
 
 namespace Xesin.GameplayFramework
 {
-    [RequireComponent(typeof(PawnMovement))]
     public class Pawn : GameplayObject
     {
         public float BaseEyeHeight = 1.5f;
@@ -239,6 +238,7 @@ namespace Xesin.GameplayFramework
 
         public Vector3 GetVelocity()
         {
+            if (!movementComponent) return Vector3.zero;
             return movementComponent.GetVelocity();
         }
     }

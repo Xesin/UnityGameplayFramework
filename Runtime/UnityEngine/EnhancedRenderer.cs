@@ -11,15 +11,14 @@ namespace Xesin.GameplayFramework
 
         private Renderer renderer;
 
-        private void LateUpdate()
-        {
-            renderer.enabled = true;
-        }
-
+        private bool enabledState = false;
 
         private void OnWillRenderObject()
         {
-            if(!Camera.current)
+            if (!renderer) renderer = GetComponent<Renderer>();
+            enabledState = renderer.enabled;
+
+            if (!Camera.current)
             {
                 renderer.enabled = true;
                 return;
@@ -31,8 +30,6 @@ namespace Xesin.GameplayFramework
                 renderer.enabled = true;
                 return;
             }
-
-            if (!renderer) renderer = GetComponent<Renderer>();
 
             if (!OwnerCanSee)
             {
