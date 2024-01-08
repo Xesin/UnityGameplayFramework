@@ -24,6 +24,17 @@ namespace Xesin.GameplayFramework
         private PlayerStart[] playerStarts;
         private int lastPlayerStartIndex = -1;
 
+        private IEnumerator Start()
+        {
+            yield return OnPrepareLevel();
+            yield return OnLevelReady();
+        }
+
+        protected virtual IEnumerator OnPrepareLevel()
+        {
+            yield return null;
+        }
+
         public virtual IEnumerator OnLevelReady()
         {
             Instantiate(screenViewport);
