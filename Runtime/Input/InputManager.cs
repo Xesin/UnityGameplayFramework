@@ -50,20 +50,23 @@ namespace Xesin.GameplayFramework.Input
 
         private void OnDestroy()
         {
+#if !UNITY_SWITCH
             if (Application.isPlaying)
             {
                 InputUser.onUnpairedDeviceUsed -= UnpairedDeviceUsed;
                 --InputUser.listenForUnpairedDeviceActivity;
             }
+#endif
         }
 
         internal void Initialize()
         {
             if (!initialized)
             {
+#if !UNITY_SWITCH
                 InputUser.onUnpairedDeviceUsed += UnpairedDeviceUsed;
                 ++InputUser.listenForUnpairedDeviceActivity;
-
+#endif
                 LookForUnpairedDevices();
 
                 Debug.Log("Input Manager initialized");
