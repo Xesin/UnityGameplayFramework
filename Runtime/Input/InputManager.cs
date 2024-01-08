@@ -17,6 +17,9 @@ namespace Xesin.GameplayFramework.Input
         private bool initialized = false;
         public bool Initialized => initialized;
 
+        private CursorLockMode currentLockMode = CursorLockMode.None;
+        private bool cursorVisibility = true;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void InitializeOnLoad()
         {
@@ -29,6 +32,19 @@ namespace Xesin.GameplayFramework.Input
             if (Application.isPlaying)
             {
                 DontDestroyOnLoad(gameObject);
+            }
+        }
+
+        void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus)
+            {
+                Cursor.lockState = currentLockMode;
+                Cursor.visible = cursorVisibility;
+            }
+            else
+            {
+                Debug.Log("Application lost focus");
             }
         }
 
@@ -123,6 +139,8 @@ namespace Xesin.GameplayFramework.Input
 
         public void SetCursorState(CursorLockMode lockMode, bool visibility)
         {
+            currentLockMode = lockMode;
+            cursorVisibility = visibility;
             Cursor.lockState = lockMode;
             Cursor.visible = visibility;
         }

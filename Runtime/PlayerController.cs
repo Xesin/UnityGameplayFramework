@@ -29,19 +29,6 @@ namespace Xesin.GameplayFramework
             rotationInput = Vector3.zero;
         }
 
-        void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus)
-            {
-                Cursor.lockState = GetDefaultCursorLockMode();
-                Cursor.visible = GetDefaultCursorVisibility();
-            }
-            else
-            {
-                Debug.Log("Application lost focus");
-            }
-        }
-
         private void OnDestroy()
         {
             if (possesedPawn)
