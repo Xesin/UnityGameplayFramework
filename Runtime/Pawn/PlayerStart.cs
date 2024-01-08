@@ -13,6 +13,7 @@ namespace Xesin.GameplayFramework
 
         public static void DrawWireCapsule(Vector3 _pos, Quaternion _rot, float _radius, float _height, Color _color = default(Color))
         {
+#if UNITY_EDITOR
             if (_color != default(Color))
                 Handles.color = _color;
             Matrix4x4 angleMatrix = Matrix4x4.TRS(_pos, _rot, Handles.matrix.lossyScale);
@@ -36,6 +37,7 @@ namespace Xesin.GameplayFramework
             }
 
             Gizmos.DrawIcon(_pos, "PlayerStart.png");
+#endif
         }
 
     }
