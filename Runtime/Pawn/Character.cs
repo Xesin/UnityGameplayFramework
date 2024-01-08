@@ -1,7 +1,5 @@
-using Xesin.GameplayFramework;
-using PlasticPipe.PlasticProtocol.Server;
-using System;
 using UnityEngine;
+using Xesin.GameplayFramework;
 
 [RequireComponent(typeof(CharacterMovement))]
 public class Character : Pawn
@@ -168,7 +166,7 @@ public class Character : Pawn
     {
         bool baseChanged = newBase != baseObject;
 
-        if(baseChanged)
+        if (baseChanged)
         {
             //// TODO: Verify no recursion
             //foreach(Transform child in newBase)
@@ -183,9 +181,9 @@ public class Character : Pawn
 
             baseObject = newBase;
 
-            if(characterMovement)
+            if (characterMovement)
             {
-                if(newBase)
+                if (newBase)
                 {
                     // Force base location and relative position to be computed since we have a new base or bone so the old relative offset is meaningless.
                     characterMovement.SaveBaseLocation();
