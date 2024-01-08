@@ -32,13 +32,14 @@ namespace Xesin.GameplayFramework
 
         protected virtual IEnumerator OnPrepareLevel()
         {
+            Instantiate(screenViewport);
+            CreateInitialPlayerControllers();
+
             yield return null;
         }
 
         public virtual IEnumerator OnLevelReady()
         {
-            Instantiate(screenViewport);
-            CreateInitialPlayerControllers();
             CreateInitialPlayerPawns();
 
             yield return null;
@@ -69,7 +70,7 @@ namespace Xesin.GameplayFramework
 
             var spawnPoint = GetSpawnPoint();
 
-            if(spawnPoint)
+            if (spawnPoint)
             {
                 spawnPosition = spawnPoint.position;
                 spawnOrientation = spawnPoint.rotation;
@@ -144,7 +145,7 @@ namespace Xesin.GameplayFramework
 
         public virtual Transform GetSpawnPoint()
         {
-            if(playerStarts == null) playerStarts = FindObjectsOfType<PlayerStart>();
+            if (playerStarts == null) playerStarts = FindObjectsOfType<PlayerStart>();
             if (playerStarts.Length == 0) return null;
 
 

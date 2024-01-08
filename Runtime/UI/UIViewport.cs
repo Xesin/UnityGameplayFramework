@@ -25,9 +25,7 @@ public class UIViewport : MonoBehaviour
 
     public void AddWidget(GameObject gameObject)
     {
-        var rect = gameObject.GetComponent<RectTransform>();
-        rect.SetParent(canvas.transform, false);
-
+        Instantiate(gameObject, canvas.GetComponent<RectTransform>(), false);
     }
 
     public void SetOutputCamera(Camera camera)

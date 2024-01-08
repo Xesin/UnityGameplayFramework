@@ -80,6 +80,8 @@ namespace Xesin.GameplayFramework.Input
             var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
             var otherDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name != "Mouse" && device.name != "Keyboard");
 
+            Debug.Log("Found Devices: " + InputUser.GetUnpairedInputDevices().Count);
+
             if (otherDevices.Count() > 0)
             {
                 playerOneDevices = playerOneDevices.Append(otherDevices.ElementAt(0)).ToArray();
@@ -128,6 +130,7 @@ namespace Xesin.GameplayFramework.Input
 
         private LocalPlayer CreatePlayerWithDevices(params InputDevice[] devices)
         {
+            Debug.Log("Creating player with " + devices.Length + " devices");
             if (LocalPlayer.GetNumPlayers() >= MAX_PLAYERS)
                 return null;
 
