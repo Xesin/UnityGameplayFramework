@@ -7,15 +7,19 @@ namespace Xesin.GameplayCues
     [RequireComponent(typeof(MonoBehaviourReleaseEvent))]
     public class GameplayCueNotify_GameObject : MonoBehaviour
     {
+        [NonSerialized]
         private bool hasHandledOnActiveEvent;
+        [NonSerialized]
         private bool hasHandledWhileActiveEvent;
+        [NonSerialized]
         private bool hasHandledOnRemoveEvent;
-
+        [SerializeField] 
+        protected GameplayCueNotify_PlacementInfo defaultPlacementInfo;
 
         [field: SerializeField, Tooltip("Tag this notify is activated by")]
-        public string GameplayCueTag { get; private set; }
+        public GameplayTag TriggerTag { get; private set; }
 
-        [NonSerialized] 
+        [NonSerialized]
         public bool inRecycleQueue = false;
 
         /// <summary>
@@ -55,10 +59,13 @@ namespace Xesin.GameplayCues
         /// 
         /// </summary>
         [SerializeField, Tooltip("We will auto destroy (recycle) this GameplayCueActor when the OnRemove event fires (after OnRemove is called)")]
-        private bool autoDestroyOnRemove = true;
+        protected bool autoDestroyOnRemove = true;
+
+        [Tooltip("This indicates if all tags will be overriden by this. ex: when true, if this has the tag Events.Weapons.Fire whis will not trigger Events.Weapons")]
+        public bool isOverride = true;
 
         [SerializeField]
-        private float autoDestroyDelay;
+        protected float autoDestroyDelay;
 
         [NonSerialized]
         public GameObject cueInstigator;
@@ -66,7 +73,7 @@ namespace Xesin.GameplayCues
         [NonSerialized]
         public GameObject sourceObject;
 
-        public bool HandlesEvent(GameplayCueEvent EventType)
+        public virtual bool HandlesEvent(GameplayCueEvent EventType)
         {
             return true;
         }
@@ -173,6 +180,11 @@ namespace Xesin.GameplayCues
         /// <returns></returns>
         protected virtual bool OnRemove(GameObject target, GameplayCueParameters parameters) { return false; }
 
+        public virtual bool CanBeRecycled()
+        {
+            return true;
+        }
+
         public virtual bool Recycle()
         {
             hasHandledOnActiveEvent = false;
@@ -226,7 +238,7 @@ namespace Xesin.GameplayCues
 
         protected virtual void OnDestroy()
         {
-            
+
         }
     }
 }

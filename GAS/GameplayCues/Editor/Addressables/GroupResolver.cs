@@ -88,6 +88,8 @@ namespace Xesin.GameplayCues
                 assetEntry.address = address;
             }
 
+            assetEntry.SetLabel("default", true, true, true);
+
             return assetEntry;
         }
 
@@ -146,7 +148,7 @@ namespace Xesin.GameplayCues
 
             // Don't use hash as it creates very long file names that can cause issues on Windows.
             schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.NoHash;
-
+            schema.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
             if (createUndo)
                 Undo.RegisterCreatedObjectUndo(group, "Create group");
             return group;

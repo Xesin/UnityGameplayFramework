@@ -9,8 +9,6 @@ namespace Xesin.GameplayCues
         [SerializeField] protected GameplayCueNotify_BurstEffects recurringEffects;
         [SerializeField] protected GameplayCueNotify_BurstEffects removalEffects;
 
-        [SerializeField] protected GameplayCueNotify_PlacementInfo defaultPlacementInfo;
-
         protected GameplayCueNotify_SpawnResult applicationSpawnResults = new GameplayCueNotify_SpawnResult(0);
         protected GameplayCueNotify_SpawnResult loopingSpawnResults = new GameplayCueNotify_SpawnResult(0);
         protected GameplayCueNotify_SpawnResult recurringSpawnResults = new GameplayCueNotify_SpawnResult(0);
@@ -76,7 +74,6 @@ namespace Xesin.GameplayCues
             removalSpawnResults.Reset();
 
             loopingEfectsRemoved = true;
-
             return true;
         }
 
@@ -93,6 +90,10 @@ namespace Xesin.GameplayCues
         {
             base.OnDestroy();
             RemoveLoopingEffects();
+            applicationEffects.CleanUp();
+            loopingEffects.CleanUp();
+            recurringEffects.CleanUp();
+            removalEffects.CleanUp();
         }
     }
 }

@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.Util;
 using UnityEngine.SceneManagement;
-using Xesin.AddressablesExtensions;
 
 namespace Xesin.GameplayCues
 {
     public class GameplayCueManager : ComponentSingleton<GameplayCueManager>
     {
-        private Dictionary<Type, Queue<GameplayCueNotify_GameObject>> recycledQueue = new Dictionary<Type, Queue<GameplayCueNotify_GameObject>>();
+        private Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>> recycledQueue = new Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>>();
+        Dictionary<string, GameObject> loadedCues = new Dictionary<string, GameObject>();
 
+        static readonly ProfilerMarker s_DispatchEventMarker = new ProfilerMarker("CueManager.DispatchEvent");
+        static readonly ProfilerMarker s_CleanUpRecycleMarker = new ProfilerMarker("CueManager.RecycleCleanUp");
 
         private void Start()
         {
@@ -26,6 +29,7 @@ namespace Xesin.GameplayCues
 
         private void OnSceneUnload(Scene scene)
         {
+            s_CleanUpRecycleMarker.Begin(this);
             List<GameplayCueNotify_GameObject> tmpList = new List<GameplayCueNotify_GameObject>(recycledQueue.Count);
             foreach (var cueType in recycledQueue)
             {
@@ -33,6 +37,10 @@ namespace Xesin.GameplayCues
                 {
                     if (recycledObject)
                         tmpList.Add(recycledObject);
+                    else
+                    {
+                        ReleaseCue(recycledObject);
+                    }
                 }
 
             }
@@ -41,36 +49,92 @@ namespace Xesin.GameplayCues
             {
                 PushToRecycleQueue(tmpList[i]);
             }
+
+            s_CleanUpRecycleMarker.End();
+        }
+
+        private void ReleaseCue(GameplayCueNotify_GameObject cueObject)
+        {
+            if (loadedCues.ContainsKey(cueObject.TriggerTag.value))
+            {
+                loadedCues.Remove(cueObject.TriggerTag.value);
+                Addressables.Release(cueObject.gameObject);
+            }
         }
 
         private void PushToRecycleQueue(GameplayCueNotify_GameObject cueObject)
         {
             Type cueType = cueObject.GetType();
-            if (!recycledQueue.ContainsKey(cueType))
+            KeyValuePair<Type, GameplayTag> keypair = new KeyValuePair<Type, GameplayTag>(cueType, cueObject.TriggerTag);
+
+            if (!recycledQueue.ContainsKey(keypair))
             {
-                recycledQueue.Add(cueType, new Queue<GameplayCueNotify_GameObject>());
+                recycledQueue.Add(keypair, new Queue<GameplayCueNotify_GameObject>());
             }
             cueObject.inRecycleQueue = true;
-            recycledQueue[cueType].Enqueue(cueObject);
+            recycledQueue[keypair].Enqueue(cueObject);
         }
 
-        public void HandleGameplayCue(GameObject target, string tag, GameplayCueEvent eventType, GameplayCueParameters gameplayCueParameters)
+        public void HandleGameplayCue(GameObject target, GameplayTag tag, GameplayCueEvent eventType, GameplayCueParameters gameplayCueParameters)
         {
-            RouteGameplayCue(target, tag, eventType, gameplayCueParameters);
-        }
-
-        public void RouteGameplayCue(GameObject target, string tag, GameplayCueEvent eventType, GameplayCueParameters parameters)
-        {
-            var handler = Addressables.LoadAssetAsync<GameObject>(tag);
-            GameObject loadedCue = handler.WaitForCompletion();
-
-            if (loadedCue == null)
+            s_DispatchEventMarker.Begin(this);
+#if UNITY_EDITOR
+            if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+#endif
             {
-                Debug.LogError($"GameplayCue with tag {tag} cannot be loaded or do not exist");
+                if (string.IsNullOrEmpty(tag.value)) return;
+                RouteGameplayCue(target, tag, eventType, gameplayCueParameters);
+            }
+            s_DispatchEventMarker.End();
+        }
+
+        private void RouteGameplayCue(GameObject target, GameplayTag tag, GameplayCueEvent eventType, GameplayCueParameters parameters)
+        {
+            if (!GameplayTagsContainer.Instance.IsValid(tag))
+            {
+                Debug.LogError("No valid tag was found for tag: " + tag.value);
                 return;
             }
 
-            if (loadedCue.TryGetComponent<GameplayCueNotify_Loop>(out var instancedCue))
+            tag = GameplayTagsContainer.Instance.ResolveTag(tag);
+            parameters.cueTag = tag;
+
+            if (!loadedCues.TryGetValue(tag.value, out var loadedCue))
+            {
+                var handler = Addressables.LoadAssetAsync<GameObject>(tag.value);
+                loadedCue = handler.WaitForCompletion();
+                loadedCues.Add(tag.value, loadedCue);
+            }
+
+            if (loadedCue == null)
+            {
+                //Didn't even load it, so IsOverride should not apply.
+                RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                return;
+            }
+
+            if (loadedCue.TryGetComponent<GameplayCueNotify_Static>(out var staticCue))
+            {
+                if (staticCue.HandlesEvent(eventType))
+                {
+                    staticCue.HandleGameplayCue(target, eventType, parameters);
+
+                    if (!staticCue.isOverride)
+                    {
+                        RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(tag.parentTag)) return;
+
+                    //Didn't even handle it, so IsOverride should not apply.
+                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                }
+
+                return;
+            }
+            else if (loadedCue.TryGetComponent<GameplayCueNotify_GameObject>(out var instancedCue))
             {
                 if (instancedCue.HandlesEvent(eventType))
                 {
@@ -78,14 +142,21 @@ namespace Xesin.GameplayCues
 
                     if (spawnedCue)
                     {
-                        handler.BindTo(spawnedCue.gameObject);
+                        if (!spawnedCue.isOverride)
+                        {
+                            RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                        }
+
                         spawnedCue.HandleGameplayCue(target, eventType, parameters);
                         return;
                     }
                 }
+                else
+                {
+                    //Didn't even handle it, so IsOverride should not apply.
+                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                }
             }
-
-            Addressables.ReleaseInstance(handler);
         }
 
         public T GetInstancedCueActor<T>(GameObject target, T prefab, GameplayCueParameters parameters) where T : GameplayCueNotify_GameObject
@@ -98,9 +169,9 @@ namespace Xesin.GameplayCues
                 return existingCueOnObject;
             }
 
-            T recycledCue = FindRecycledCue<T>();
+            T recycledCue = FindRecycledCue<T>(prefab.GetType(), prefab.TriggerTag);
 
-            if(recycledCue)
+            if (recycledCue)
             {
                 Transform targetTransform = target.transform;
                 recycledCue.inRecycleQueue = false;
@@ -123,18 +194,19 @@ namespace Xesin.GameplayCues
             return spawnedCue;
         }
 
-        private T FindRecycledCue<T>() where T : GameplayCueNotify_GameObject
+        private T FindRecycledCue<T>(Type type, GameplayTag tag) where T : GameplayCueNotify_GameObject
         {
-            if(!recycledQueue.TryGetValue(typeof(T), out var notifyQueue))
+            KeyValuePair<Type, GameplayTag> queueKey = new KeyValuePair<Type, GameplayTag>(type, tag);
+            if (!recycledQueue.TryGetValue(queueKey, out var notifyQueue))
             {
                 return null;
             }
 
-            while(notifyQueue.Count > 0)
+            while (notifyQueue.Count > 0)
             {
                 GameplayCueNotify_GameObject recycledCue = notifyQueue.Dequeue();
 
-                if(recycledCue)
+                if (recycledCue)
                 {
                     return recycledCue as T;
                 }
@@ -150,6 +222,7 @@ namespace Xesin.GameplayCues
                 if (child && child.TryGetComponent<T>(out var foundCue))
                 {
                     if (foundCue.IsPendingDestroy()) continue;
+                    if (!foundCue.TriggerTag.MatchesTag(Parameters.cueTag, false)) continue;
 
                     bool instigatorMatches = !foundCue.uniqueInstancePerInstigator || foundCue.cueInstigator == Parameters.instigator;
                     bool sourceObjectMatches = !foundCue.uniqueInstancePerSourceObject || foundCue.sourceObject == Parameters.sourceObject;
@@ -166,10 +239,14 @@ namespace Xesin.GameplayCues
 
         public void NotifyGameplayCueActorFinished(GameplayCueNotify_GameObject cue)
         {
-            if (cue)
+            if (cue && cue.CanBeRecycled())
             {
                 cue.Recycle();
                 PushToRecycleQueue(cue);
+            }
+            else
+            {
+                ReleaseCue(cue);
             }
         }
 
