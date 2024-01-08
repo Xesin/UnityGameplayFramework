@@ -87,19 +87,17 @@ namespace Xesin.GameplayFramework.Input
         private void UnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             var device = control.device;
-            int controllers = PlayerController.GetNumPlayerControllers();
+            int controllers = LocalPlayer.GetNumPlayers();
             if (!GameplayGlobalSettings.Instance.autocreatePlayersOnInput) return;
 
             for (int i = 0; i < controllers; i++)
             {
-                PlayerController playerController = PlayerController.GetPlayerController(i);
+                LocalPlayer playerController = LocalPlayer.GetLocalPlayer(i);
 
-                InputComponent inputComponent = playerController.GetInputComponent();
-
-                if (inputComponent.Devices.Contains(device)) return;
+                if (playerController.Devices.Contains(device)) return;
             }
 
-            var player = CreatePlayerWithDevices(device);
+            _ = CreatePlayerWithDevices(device);
         }
 
         public LocalPlayer CreatePlayer(InputDevice device)
