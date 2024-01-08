@@ -19,8 +19,7 @@ namespace Xesin.GameplayFramework
         {
             inputComponent = GetComponent<InputComponent>();
             playerControllers.Add(this);
-            Cursor.lockState = GetDefaultCursorLockMode();
-            Cursor.visible = GetDefaultCursorVisibility();
+            InputManager.Instance.SetCursorState(GetDefaultCursorLockMode(), GetDefaultCursorVisibility());
         }
 
         protected virtual void LateUpdate()

@@ -121,5 +121,11 @@ namespace Xesin.GameplayFramework.Input
             return player;
         }
 
+        public void SetCursorState(CursorLockMode lockMode, bool visibility)
+        {
+            Cursor.lockState = lockMode;
+            Cursor.visible = visibility;
+        }
+
     }
 }
