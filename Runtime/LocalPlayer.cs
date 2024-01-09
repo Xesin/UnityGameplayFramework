@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -57,6 +58,14 @@ namespace Xesin.GameplayFramework
         public void SetDevices(InputDevice[] devices)
         {
             Devices = devices;
+        }
+
+        public void AddNewDevice(InputDevice device)
+        {
+            InputDevice[] devices = Devices;
+            Array.Resize(ref devices, Devices.Length + 1);
+            Devices = devices;
+            devices[^1] = device;
         }
 
         public void UnpairDevices()
