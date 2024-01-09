@@ -7,12 +7,12 @@ using UnityEngine.InputSystem.UI;
 namespace Xesin.GameplayFramework
 {
 
-    [RequireComponent(typeof(InputSystemUIInputModule), typeof(EventSystem), typeof(PlayerInput))]
+    [RequireComponent(typeof(InputSystemUIInputModule), typeof(PlayerInput))]
     public class LocalPlayer : MonoBehaviour
     {
         private static List<LocalPlayer> localPlayers;
         public InputSystemUIInputModule UIInputModule { get; private set; }
-        public EventSystem EventSystem { get; private set; }
+        public EventSystem EventSystem { get; set; }
         public PlayerInput PlayerInput { get; private set; }
         public UIViewport uiViewport { get; private set; }
         public InputDevice[] Devices { get; private set; } = new InputDevice[0];
@@ -30,8 +30,9 @@ namespace Xesin.GameplayFramework
             DontDestroyOnLoad(gameObject);
             localPlayers.Add(this);
             UIInputModule = GetComponent<InputSystemUIInputModule>();
-            EventSystem = GetComponent<MultiplayerEventSystem>();
             PlayerInput = GetComponent<PlayerInput>();
+
+            EventSystem = EventSystem.current;
         }
 
 
