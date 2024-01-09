@@ -148,9 +148,9 @@ namespace Xesin.GameplayFramework.Input
             }
         }
 
-        public LocalPlayer CreatePlayer(InputDevice device)
+        public LocalPlayer CreatePlayer(params InputDevice[] devices)
         {
-            var player = CreatePlayerWithDevices(new InputDevice[] { device }, device);
+            var player = CreatePlayerWithDevices(devices, devices);
             GameMode.Instance.OnNewPlayerAdded(player);
             return player;
         }

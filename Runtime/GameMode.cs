@@ -1,5 +1,7 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using Xesin.GameplayFramework.Input;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayFramework
@@ -23,6 +25,7 @@ namespace Xesin.GameplayFramework
 
         private PlayerStart[] playerStarts;
         private int lastPlayerStartIndex = -1;
+        private GameObject dummyPawn;
 
         private IEnumerator Start()
         {
@@ -43,6 +46,8 @@ namespace Xesin.GameplayFramework
             CreateInitialPlayerPawns();
 
             yield return null;
+            yield return new WaitForSeconds(5);
+            InputManager.Instance.CreatePlayer(Keyboard.current, Mouse.current);
         }
 
         public virtual PlayerController CreatePlayerController(LocalPlayer localPlayer)
@@ -65,6 +70,9 @@ namespace Xesin.GameplayFramework
 
         protected virtual Pawn CreatePlayerPawn(PlayerController playerController)
         {
+            if (dummyPawn) 
+                Destroy(dummyPawn);
+
             Vector3 spawnPosition = Vector3.zero;
             Quaternion spawnOrientation = Quaternion.identity;
 
@@ -96,6 +104,18 @@ namespace Xesin.GameplayFramework
         protected virtual void CreateInitialPlayerPawns()
         {
             int numPlayers = PlayerController.GetNumPlayerControllers();
+
+            if(numPlayers == 0)
+            {
+                dummyPawn = new GameObject("DummyPawn");
+
+                if(!Camera.main)
+                    dummyPawn.AddComponent<Camera>();
+
+                dummyPawn.tag = "MainCamera";
+                dummyPawn.AddComponent<Pawn>();
+                dummyPawn.hideFlags = HideFlags.HideAndDontSave;
+            }
 
             for (int i = 0; i < numPlayers; i++)
             {
