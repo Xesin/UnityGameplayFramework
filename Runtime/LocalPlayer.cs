@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.UI;
 namespace Xesin.GameplayFramework
 {
 
-    [RequireComponent(typeof(InputSystemUIInputModule), typeof(PlayerInput))]
+    [RequireComponent(typeof(PlayerInput))]
     public class LocalPlayer : MonoBehaviour
     {
         private static List<LocalPlayer> localPlayers;
