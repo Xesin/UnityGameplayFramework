@@ -46,8 +46,6 @@ namespace Xesin.GameplayFramework
             CreateInitialPlayerPawns();
 
             yield return null;
-            yield return new WaitForSeconds(5);
-            InputManager.Instance.CreatePlayer(Keyboard.current, Mouse.current);
         }
 
         public virtual PlayerController CreatePlayerController(LocalPlayer localPlayer)
