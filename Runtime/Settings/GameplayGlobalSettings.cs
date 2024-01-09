@@ -10,17 +10,17 @@ namespace Xesin.GameplayFramework
     public class GameplayGlobalSettings : ScriptableObject
     {
         public static string assetPath = "Assets/Resources/GameplaySettings.asset";
-        private static GameplayGlobalSettings s_Instance;
+        private static GameplayGlobalSettings instance;
         public static GameplayGlobalSettings Instance
         {
             get
             {
-                if (s_Instance == null)
+                if (instance == null)
                 {
-                    s_Instance = Resources.Load<GameplayGlobalSettings>("GameplaySettings");
+                    instance = Resources.Load<GameplayGlobalSettings>("GameplaySettings");
                 }
 
-                return s_Instance;
+                return instance;
             }
         }
 
@@ -36,13 +36,23 @@ namespace Xesin.GameplayFramework
         }
 
         [SerializeField]
-        private bool m_autocreatePlayersOnInput;
-        public bool autocreatePlayersOnInput
+        private bool autocreatePlayersOnInput;
+        [SerializeField]
+        private bool autocreatePlayerOne = true;
+        public bool AutocreatePlayersOnInput
         {
-            get => m_autocreatePlayersOnInput;
+            get => autocreatePlayersOnInput;
             set
             {
-                m_autocreatePlayersOnInput = value;
+                autocreatePlayersOnInput = value;
+            }
+        }
+        public bool AutocreatePlayerOne
+        {
+            get => autocreatePlayerOne;
+            set
+            {
+                autocreatePlayerOne = value;
             }
         }
 

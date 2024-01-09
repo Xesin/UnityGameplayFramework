@@ -11,6 +11,7 @@ class GameplayFrameworkSettingsPanelProvider
     class Styles
     {
         public static GUIContent playerPrefab = new GUIContent("Player prefab");
+        public static GUIContent autoCreatePlayerOne = new GUIContent("Auto-create first player");
         public static GUIContent autoCreatePlayers = new GUIContent("Auto-create players");
         public static GUIContent assetNotPresent = new GUIContent("Settings asset is not present");
         public static GUIContent fix = new GUIContent("Fix");
@@ -58,7 +59,8 @@ class GameplayFrameworkSettingsPanelProvider
         {
             settings.Update();
             EditorGUILayout.PropertyField(settings.FindProperty("m_localPlayerPrefab"), Styles.playerPrefab);
-            EditorGUILayout.PropertyField(settings.FindProperty("m_autocreatePlayersOnInput"), Styles.autoCreatePlayers);
+            EditorGUILayout.PropertyField(settings.FindProperty("autocreatePlayerOne"), Styles.autoCreatePlayerOne);
+            EditorGUILayout.PropertyField(settings.FindProperty("autocreatePlayersOnInput"), Styles.autoCreatePlayers);
             if (settings.hasModifiedProperties)
             {
                 settings.ApplyModifiedProperties();

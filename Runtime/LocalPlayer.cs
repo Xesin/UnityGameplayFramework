@@ -58,6 +58,12 @@ namespace Xesin.GameplayFramework
             Devices = devices;
         }
 
+        public void UnpairDevices()
+        {
+            Devices = new InputDevice[0];
+            PlayerInput.user.UnpairDevices();
+        }
+
         public int GetPlayerIndex()
         {
             return localPlayers.IndexOf(this);

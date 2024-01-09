@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayFramework.Input
@@ -77,30 +79,34 @@ namespace Xesin.GameplayFramework.Input
 
         private void LookForUnpairedDevices()
         {
-            var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
-            var otherDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name != "Mouse" && device.name != "Keyboard");
-
-            Debug.Log("Found Devices: " + InputUser.GetUnpairedInputDevices().Count);
-
-            if (otherDevices.Count() > 0)
+            if (GameplayGlobalSettings.Instance.AutocreatePlayerOne)
             {
-                playerOneDevices = playerOneDevices.Append(otherDevices.ElementAt(0)).ToArray();
-            }
+                var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
+                var otherDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name != "Mouse" && device.name != "Keyboard");
 
-            if (playerOneDevices.Count() > 0)
-            {
-                var playerOneInput = CreatePlayerWithDevices(playerOneDevices);
-            }
-
-            if (GameplayGlobalSettings.Instance.autocreatePlayersOnInput)
-            {
-                var unpairedDevices = InputUser.GetUnpairedInputDevices().ToArray();
-
-                for (int i = 0; i < unpairedDevices.Length; i++)
+                if (otherDevices.Count() > 0)
                 {
-                    if (playerOneDevices.Contains(unpairedDevices[i])) continue;
+                    playerOneDevices = playerOneDevices.Append(otherDevices.ElementAt(0)).ToArray();
+                }
 
-                    CreatePlayerWithDevices(unpairedDevices[i]);
+                if (playerOneDevices.Count() > 0)
+                {
+
+                    var controlScheme = InputControlScheme.FindControlSchemeForDevices(
+                        new ReadOnlyArray<InputDevice>(playerOneDevices, 0, playerOneDevices.Length), 
+                        GameplayGlobalSettings.Instance.localPlayerPrefab.GetComponent<PlayerInput>().actions.controlSchemes,
+                        allowUnsuccesfulMatch: true) ?? default;
+
+                    List<InputDevice> initialDevices = new List<InputDevice>();
+
+                    for (var i = 0; i < playerOneDevices.Length; ++i)
+                    {
+                        var device = playerOneDevices[i];
+                        if (controlScheme.SupportsDevice(device))
+                            initialDevices.Add(device);
+                    }
+
+                    var playerOneInput = CreatePlayerWithDevices(initialDevices.ToArray(), playerOneDevices);
                 }
             }
         }
@@ -109,32 +115,45 @@ namespace Xesin.GameplayFramework.Input
         {
             var device = control.device;
             int controllers = LocalPlayer.GetNumPlayers();
-            if (!GameplayGlobalSettings.Instance.autocreatePlayersOnInput) return;
 
             for (int i = 0; i < controllers; i++)
             {
                 LocalPlayer playerController = LocalPlayer.GetLocalPlayer(i);
 
-                if (playerController.Devices.Contains(device)) return;
+                if (playerController.Devices.Contains(device))
+                {
+                    PerfomPairingWithDevice(device, playerController);
+                    return;
+                }
             }
 
-            _ = CreatePlayerWithDevices(device);
+            if (!GameplayGlobalSettings.Instance.AutocreatePlayersOnInput) return;
+            _ = CreatePlayer(device);
+        }
+
+        private static void PerfomPairingWithDevice(InputDevice device, LocalPlayer playerController)
+        {
+            if (InputControlScheme.FindControlSchemeForDevices(playerController.Devices, playerController.PlayerInput.actions.controlSchemes,
+                                    out var controlScheme, out var matchResult, mustIncludeDevice: device))
+            {
+                playerController.PlayerInput.SwitchCurrentControlScheme(matchResult.devices.ToArray());
+            }
         }
 
         public LocalPlayer CreatePlayer(InputDevice device)
         {
-            var player = CreatePlayerWithDevices(device);
+            var player = CreatePlayerWithDevices(new InputDevice[] { device }, device);
             GameMode.Instance.OnNewPlayerAdded(player);
             return player;
         }
 
-        private LocalPlayer CreatePlayerWithDevices(params InputDevice[] devices)
+        private LocalPlayer CreatePlayerWithDevices(InputDevice[] initialDevices, params InputDevice[] devices)
         {
             Debug.Log("Creating player with " + devices.Length + " devices");
             if (LocalPlayer.GetNumPlayers() >= MAX_PLAYERS)
                 return null;
 
-            var player = PlayerInput.Instantiate(GameplayGlobalSettings.Instance.localPlayerPrefab.gameObject, -1, null, -1, devices).GetComponent<LocalPlayer>();
+            var player = PlayerInput.Instantiate(GameplayGlobalSettings.Instance.localPlayerPrefab.gameObject, -1, null, -1, initialDevices).GetComponent<LocalPlayer>();
 
             player.SetDevices(devices);
 
