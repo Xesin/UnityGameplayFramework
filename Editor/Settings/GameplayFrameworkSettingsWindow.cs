@@ -11,6 +11,7 @@ class GameplayFrameworkSettingsPanelProvider
     class Styles
     {
         public static GUIContent playerPrefab = new GUIContent("Player prefab");
+        public static GUIContent inputActions = new GUIContent("Game Input Actions");
         public static GUIContent autoCreatePlayerOne = new GUIContent("Auto-create first player");
         public static GUIContent autoCreatePlayers = new GUIContent("Auto-create players");
         public static GUIContent assetNotPresent = new GUIContent("Settings asset is not present");
@@ -18,6 +19,11 @@ class GameplayFrameworkSettingsPanelProvider
 
         public static GUIStyle errorStyle = new GUIStyle() { normal = new GUIStyleState() { textColor = Color.red } };
     }
+
+    private static SerializedProperty localPlayerPrefab;
+    private static SerializedProperty inputActionAsset;
+    private static SerializedProperty autocreatePlayerOne;
+    private static SerializedProperty autocreatePlayersOnInput;
 
     [SettingsProvider]
     public static SettingsProvider CreateSettingsProvider()
@@ -35,8 +41,15 @@ class GameplayFrameworkSettingsPanelProvider
 
     static void OnActivate(string searchContext, VisualElement root)
     {
-        if(GameplayGlobalSettings.Instance)
+        if (GameplayGlobalSettings.Instance)
+        {
             settings = new SerializedObject(GameplayGlobalSettings.Instance);
+            localPlayerPrefab = settings.FindProperty(nameof(GameplayGlobalSettings.localPlayerPrefab));
+            inputActionAsset = settings.FindProperty(nameof(GameplayGlobalSettings.gameInputActionAsset));
+            autocreatePlayerOne = settings.FindProperty(nameof(GameplayGlobalSettings.autocreatePlayerOne));
+            autocreatePlayersOnInput = settings.FindProperty(nameof(GameplayGlobalSettings.autocreatePlayersOnInput));
+        }
+
     }
 
     static void OnGUI(string searchContext)
@@ -49,18 +62,15 @@ class GameplayFrameworkSettingsPanelProvider
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(Styles.assetNotPresent, Styles.errorStyle);
-            if (GUILayout.Button("Fix"))
-            {
-                GameplayGlobalSettings.CreateAsset();
-            }
             EditorGUILayout.EndHorizontal();
         }
         else
         {
             settings.Update();
-            EditorGUILayout.PropertyField(settings.FindProperty("m_localPlayerPrefab"), Styles.playerPrefab);
-            EditorGUILayout.PropertyField(settings.FindProperty("autocreatePlayerOne"), Styles.autoCreatePlayerOne);
-            EditorGUILayout.PropertyField(settings.FindProperty("autocreatePlayersOnInput"), Styles.autoCreatePlayers);
+            EditorGUILayout.PropertyField(localPlayerPrefab, Styles.playerPrefab);
+            EditorGUILayout.PropertyField(inputActionAsset, Styles.inputActions);
+            EditorGUILayout.PropertyField(autocreatePlayerOne, Styles.autoCreatePlayerOne);
+            EditorGUILayout.PropertyField(autocreatePlayersOnInput, Styles.autoCreatePlayers);
             if (settings.hasModifiedProperties)
             {
                 settings.ApplyModifiedProperties();

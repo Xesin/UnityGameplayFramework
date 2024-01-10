@@ -79,7 +79,7 @@ namespace Xesin.GameplayFramework.Input
 
         private void LookForUnpairedDevices()
         {
-            if (GameplayGlobalSettings.Instance.AutocreatePlayerOne)
+            if (GameplayGlobalSettings.Instance.autocreatePlayerOne)
             {
                 var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
                 var otherDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name != "Mouse" && device.name != "Keyboard");
@@ -124,7 +124,7 @@ namespace Xesin.GameplayFramework.Input
                 }
             }
 
-            if (!GameplayGlobalSettings.Instance.AutocreatePlayersOnInput)
+            if (!GameplayGlobalSettings.Instance.autocreatePlayersOnInput)
             {
                 LocalPlayer playerController = LocalPlayer.GetLocalPlayer(0);
                 if(playerController)
