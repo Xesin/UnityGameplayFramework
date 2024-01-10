@@ -75,7 +75,7 @@ namespace Xesin.GameplayFramework.Messages
             ClearCallbacks();
         }
         public virtual void SendMessage(object sender, string message = "") => SendMessage(sender, null, message);
-        
+
         public virtual void SendMessage(object sender, object value, string message)
         {
             Message toSend = MessagePool.Get();

@@ -33,11 +33,11 @@ namespace Xesin.GameplayCues
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            if(NeedsReload(property))
+            if (NeedsReload(property))
             {
                 RefreshTagListProperty(property);
             }
-            
+
             label.text = property.displayName;
             EditorGUI.BeginProperty(position, label, property);
 
@@ -83,19 +83,19 @@ namespace Xesin.GameplayCues
             RefreshTagListProperty(currentProperty);
         }
 
-        internal void RemoveTag(string value) 
+        internal void RemoveTag(string value)
         {
             for (int i = 0; i < tagListProperty.arraySize; i++)
             {
                 var arrayElement = tagListProperty.GetArrayElementAtIndex(i);
                 var tagValue = arrayElement.FindPropertyRelative("value").stringValue;
-                if(value == tagValue)
+                if (value == tagValue)
                 {
                     tagListProperty.DeleteArrayElementAtIndex(i);
                     break;
                 }
             }
-            
+
             TriggerOnValidate(currentProperty);
             TriggerOnValidate(tagListProperty);
             RefreshTagListProperty(currentProperty);
@@ -230,7 +230,7 @@ namespace Xesin.GameplayCues
                 for (int i = 0; i < root.children.Count; i++)
                 {
                     if (treeViews.Contains(root.children[i])) continue;
-                    
+
                     treeViews.Add(root.children[i]);
                     AddAllChildren(treeViews, root.children[i]);
                 }
@@ -247,13 +247,13 @@ namespace Xesin.GameplayCues
                 }
 
                 if (viewItem.children == null) return;
-                
+
                 for (int i = 0; i < viewItem.children.Count; i++)
                 {
-                    if(RecursiveSearch(treeViews, viewItem.children[i]))
+                    if (RecursiveSearch(treeViews, viewItem.children[i]))
                     {
-                        if(treeViews.Contains(viewItem)) continue;
-                            treeViews.Add(viewItem);
+                        if (treeViews.Contains(viewItem)) continue;
+                        treeViews.Add(viewItem);
                     }
                 }
 
@@ -274,7 +274,7 @@ namespace Xesin.GameplayCues
 
                 for (int i = 0; i < viewItem.children.Count; i++)
                 {
-                    if(RecursiveSearch(treeViews, viewItem.children[i]))
+                    if (RecursiveSearch(treeViews, viewItem.children[i]))
                     {
                         return true;
                     }
