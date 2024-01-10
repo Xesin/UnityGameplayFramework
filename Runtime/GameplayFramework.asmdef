@@ -2,7 +2,8 @@
     "name": "GameplayFramework",
     "rootNamespace": "Xesin.GameplayFramework",
     "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:9a733e5ac3351bd4f826213db7ddda7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
