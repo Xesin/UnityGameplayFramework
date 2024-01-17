@@ -1,13 +1,16 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using Xesin.GameplayFramework.Input;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayFramework
 {
 
-    public class GameMode : MonoSingleton<GameMode>
+    public class GameMode : GameModeBase<GameMode>
+    {
+
+    }
+
+    public abstract class GameModeBase<T> : MonoSingleton<T> where T : GameModeBase<T>
     {
         [field: SerializeField]
         public Pawn pawnPrefab { get; private set; }
@@ -68,7 +71,7 @@ namespace Xesin.GameplayFramework
 
         protected virtual Pawn CreatePlayerPawn(PlayerController playerController)
         {
-            if (dummyPawn) 
+            if (dummyPawn)
                 Destroy(dummyPawn);
 
             Vector3 spawnPosition = Vector3.zero;
@@ -103,11 +106,11 @@ namespace Xesin.GameplayFramework
         {
             int numPlayers = PlayerController.GetNumPlayerControllers();
 
-            if(numPlayers == 0)
+            if (numPlayers == 0)
             {
                 dummyPawn = new GameObject("DummyPawn");
 
-                if(!Camera.main)
+                if (!Camera.main)
                     dummyPawn.AddComponent<Camera>();
 
                 dummyPawn.tag = "MainCamera";
