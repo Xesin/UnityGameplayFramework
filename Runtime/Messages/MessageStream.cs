@@ -74,11 +74,10 @@ namespace Xesin.GameplayFramework.Messages
             DisconnectAllReceivers();
             ClearCallbacks();
         }
-        public virtual void SendMessage(object sender, string message = "") => SendMessage(sender, null, message);
+        public virtual void SendMessage(object sender, string message = "") => SendMessage<object>(sender, null, message);
         public virtual void SendMessage<T>(T value, string message = "") => SendMessage(null, value, message);
-
-        public virtual void SendMessage(object sender, object value, string message)
-        {
+        public virtual void SendMessage<T>(object sender, T value, string message = "")
+        { 
             Message toSend = MessagePool.Get();
             toSend
                 .SetMessageSender(sender)
@@ -106,6 +105,15 @@ namespace Xesin.GameplayFramework.Messages
             }
         }
 
+        public static MessageStream Get(GameplayTag streamTag)
+        {
+            return MessageService.GetStream(streamTag);
+        }
+
+        public static MessageStream Get(string streamTag)
+        {
+            return Get(GameplayTagsContainer.RequestGameplayTag(streamTag));
+        }
     }
 
 }

@@ -17,7 +17,7 @@ namespace Xesin.GameplayFramework.Messages
 
         private void Awake()
         {
-            Receiver = new MessageReceiver().SetOnSignalCallback<MessageReceiver>(OnMessageReceived);
+            Receiver = new MessageReceiver().SetOnMessageCallback<MessageReceiver>(OnMessageReceived);
             IsConnected = false;
         }
 
