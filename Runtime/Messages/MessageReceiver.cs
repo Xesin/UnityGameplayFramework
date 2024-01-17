@@ -66,10 +66,15 @@ namespace Xesin.GameplayFramework.Messages
             OnSignal?.Invoke(message);
         }
 
-        public T SetOnMessageCallback<T>(UnityAction<Message> callback) where T : MessageReceiver
+        
+    }
+
+    public static class MessageReceiverExtensions
+    {
+        public static T SetOnMessageCallback<T>(this T target, UnityAction<Message> callback) where T : MessageReceiver
         {
-            OnSignal = callback;
-            return this as T;
+            target.OnSignal = callback;
+            return target;
         }
     }
 

@@ -37,6 +37,11 @@ namespace Xesin.GameplayFramework.Messages
             Streams.Add(streamTag, messageStream);
             return messageStream;
         }
+
+        public static MessageStream GetStream(string streamTag)
+        {
+            return GetStream(GameplayTagsContainer.RequestGameplayTag(streamTag));
+        }
     }
 
 }
