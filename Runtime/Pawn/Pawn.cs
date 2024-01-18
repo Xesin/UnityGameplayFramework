@@ -164,11 +164,6 @@ namespace Xesin.GameplayFramework
 
         public void FaceRotation(Vector3 rotation, float deltaTime)
         {
-            if (pawnCamera)
-            {
-                pawnCamera.ApplyControlRotation(Quaternion.Euler(rotation));
-            }
-
             if (useControllerPitch || useControllerRoll || useControllerYaw)
             {
                 Vector3 currentRotation = transform.rotation.eulerAngles;

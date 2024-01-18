@@ -1,20 +1,32 @@
-using System.Collections;
-using System.Collections.Generic;
+#if GAMEPLAY_USES_CINEMACHINE
+using Cinemachine;
+#endif
 using UnityEngine;
 
 namespace Xesin.GameplayFramework
 {
+#if GAMEPLAY_USES_CINEMACHINE 
+    [RequireComponent(typeof(CinemachineVirtualCamera))]
+#else
     [RequireComponent(typeof(Camera))]
-    public class GameplayCamera : GameplayObject
+#endif
+    public class GameplayCamera : SceneObject
     {
-        public bool useControlRotation = true;
-
+#if GAMEPLAY_USES_CINEMACHINE
+        private CinemachineVirtualCamera targetCamera;
+#else
         private Camera targetCamera;
-        
+#endif
 
-        void Awake()
+
+        protected override void Awake()
         {
+            base.Awake();
+#if GAMEPLAY_USES_CINEMACHINE
+            targetCamera = GetComponent<CinemachineVirtualCamera>();
+#else
             targetCamera = GetComponent<Camera>();
+#endif
         }
 
         private void OnEnable()
@@ -27,11 +39,13 @@ namespace Xesin.GameplayFramework
             targetCamera.enabled = false;
         }
 
-        public void ApplyControlRotation(Quaternion rotation)
+        protected override void ApplyControlRotation(Quaternion rotation)
         {
-            if(useControlRotation)
+            if (useControlRotation)
             {
+#if !GAMEPLAY_USES_CINEMACHINE
                 transform.rotation = rotation;
+#endif
             }
         }
     }

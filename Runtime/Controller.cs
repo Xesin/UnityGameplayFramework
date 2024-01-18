@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Xesin.GameplayFramework
 {
+    [DefaultExecutionOrder(10)]
     public class Controller : GameplayObject
     {
         protected Pawn possesedPawn;
