@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SceneManagement;
 using Xesin.GameplayFramework;
 using Xesin.GameplayFramework.Utils;
 
@@ -9,18 +10,32 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
     private Dictionary<LocalPlayer, UIViewport> playerViewports = new Dictionary<LocalPlayer, UIViewport>();
     private UIViewport screenViewport;
 
+    private void Awake()
+    {
+        SceneManager.sceneUnloaded += OnSceneUnLoaded;
+    }
+
     public void AddPlayerViewport(LocalPlayer localPlayer, UIViewport uIViewport)
     {
+        if (playerViewports.ContainsKey(localPlayer) && !playerViewports[localPlayer])
+            playerViewports.Remove(localPlayer);
         playerViewports.Add(localPlayer, uIViewport);
     }
 
     public void RemovePlayerViewport(LocalPlayer localPlayer, UIViewport uIViewport)
     {
+        if (!playerViewports.ContainsKey(localPlayer))
+            return;
         playerViewports.Remove(localPlayer);
     }
 
     public UIViewport GetPlayerViewport(LocalPlayer localPlayer)
     {
+        if (playerViewports.ContainsKey(localPlayer) && !playerViewports[localPlayer])
+        {
+            playerViewports.Remove(localPlayer);
+            return null;
+        }
         return playerViewports[localPlayer];
     }
 
@@ -53,6 +68,21 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
         if (playerViewports.ContainsKey(player))
         {
             playerViewports[player].AddWidget(gameObject);
+        }
+    }
+
+    private void OnSceneUnLoaded(Scene scene)
+    {
+        List<LocalPlayer> unloadedViewports = new List<LocalPlayer>(playerViewports.Count);
+        foreach (var viewport in playerViewports)
+        {
+            if (!viewport.Value)
+                unloadedViewports.Add(viewport.Key);
+        }
+
+        for (int i = 0; i < unloadedViewports.Count; i++)
+        {
+            playerViewports.Remove(unloadedViewports[i]);
         }
     }
 }
