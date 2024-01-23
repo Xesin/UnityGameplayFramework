@@ -41,6 +41,12 @@ class GameplayFrameworkSettingsPanelProvider
 
     static void OnActivate(string searchContext, VisualElement root)
     {
+        EditorApplication.update += Init;
+    }
+
+    static void Init()
+    {
+        EditorApplication.update -= Init;
         if (GameplayGlobalSettings.Instance)
         {
             settings = new SerializedObject(GameplayGlobalSettings.Instance);
@@ -49,7 +55,6 @@ class GameplayFrameworkSettingsPanelProvider
             autocreatePlayerOne = settings.FindProperty(nameof(GameplayGlobalSettings.autocreatePlayerOne));
             autocreatePlayersOnInput = settings.FindProperty(nameof(GameplayGlobalSettings.autocreatePlayersOnInput));
         }
-
     }
 
     static void OnGUI(string searchContext)
