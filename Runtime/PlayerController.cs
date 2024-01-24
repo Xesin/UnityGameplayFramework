@@ -19,7 +19,7 @@ namespace Xesin.GameplayFramework
         {
             inputComponent = GetComponent<InputComponent>();
             playerControllers.Add(this);
-            InputManager.Instance.SetCursorState(GetDefaultCursorLockMode(), GetDefaultCursorVisibility());
+            SetDefaultCursorState();
         }
 
         protected virtual void LateUpdate()
@@ -99,6 +99,11 @@ namespace Xesin.GameplayFramework
         public InputComponent GetInputComponent()
         {
             return inputComponent;
+        }
+
+        public void SetDefaultCursorState()
+        {
+            InputManager.Instance.SetCursorState(GetDefaultCursorLockMode(), GetDefaultCursorVisibility());
         }
 
         public int GetPlayerIndex()
