@@ -49,15 +49,17 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
         return screenViewport;
     }
 
-    public void AddToScreen(GameObject gameObject)
+    public UIWidget AddToScreen(UIWidget gameObject)
     {
         if (screenViewport != null)
         {
-            screenViewport.AddWidget(gameObject);
+            return screenViewport.AddWidget(gameObject);
         }
+
+        return null;
     }
 
-    public void AddToScreen(PlayerController playerController, GameObject gameObject)
+    public UIWidget AddToScreen(PlayerController playerController, UIWidget gameObject)
     {
         Assert.IsNotNull(playerController, "Tried to add ui to the screen with null player controller");
 
@@ -67,8 +69,10 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
 
         if (playerViewports.ContainsKey(player))
         {
-            playerViewports[player].AddWidget(gameObject);
+            return playerViewports[player].AddWidget(gameObject);
         }
+
+        return null;
     }
 
     private void OnSceneUnLoaded(Scene scene)

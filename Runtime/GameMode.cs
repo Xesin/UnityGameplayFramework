@@ -63,7 +63,7 @@ namespace Xesin.GameplayFramework
             pc.SetPlayer(localPlayer);
 
             var viewport = Instantiate(playerViewport);
-            viewport.Initialize(pc);
+            viewport.Initialize(localPlayer);
             localPlayer.SetPlayerViewport(viewport);
 
             return pc;
