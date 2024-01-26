@@ -39,7 +39,7 @@ namespace Xesin.GameplayFramework
         }
     }
 
-    [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(CharacterController)), DefaultExecutionOrder(0)]
     public class CharacterMovement : PawnMovement
     {
         public float maxAcceleration = 20.48f;

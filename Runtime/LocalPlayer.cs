@@ -1,17 +1,19 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 
 namespace Xesin.GameplayFramework
 {
 
-    [RequireComponent(typeof(InputSystemUIInputModule), typeof(MultiplayerEventSystem), typeof(PlayerInput))]
+    [RequireComponent(typeof(PlayerInput))]
     public class LocalPlayer : MonoBehaviour
     {
         private static List<LocalPlayer> localPlayers;
         public InputSystemUIInputModule UIInputModule { get; private set; }
-        public MultiplayerEventSystem EventSystem { get; private set; }
+        public EventSystem EventSystem { get; set; }
         public PlayerInput PlayerInput { get; private set; }
         public UIViewport uiViewport { get; private set; }
         public InputDevice[] Devices { get; private set; } = new InputDevice[0];
@@ -29,8 +31,9 @@ namespace Xesin.GameplayFramework
             DontDestroyOnLoad(gameObject);
             localPlayers.Add(this);
             UIInputModule = GetComponent<InputSystemUIInputModule>();
-            EventSystem = GetComponent<MultiplayerEventSystem>();
             PlayerInput = GetComponent<PlayerInput>();
+
+            EventSystem = EventSystem.current;
         }
 
 
@@ -48,12 +51,27 @@ namespace Xesin.GameplayFramework
         public void SetPlayerViewport(UIViewport uiViewport)
         {
             this.uiViewport = uiViewport;
-            EventSystem.playerRoot = uiViewport.gameObject;
+            if(EventSystem is MultiplayerEventSystem multiplayerEventSystem)
+                multiplayerEventSystem.playerRoot = uiViewport.gameObject;
         }
 
         public void SetDevices(InputDevice[] devices)
         {
             Devices = devices;
+        }
+
+        public void AddNewDevice(InputDevice device)
+        {
+            InputDevice[] devices = Devices;
+            Array.Resize(ref devices, Devices.Length + 1);
+            Devices = devices;
+            devices[^1] = device;
+        }
+
+        public void UnpairDevices()
+        {
+            Devices = new InputDevice[0];
+            PlayerInput.user.UnpairDevices();
         }
 
         public int GetPlayerIndex()

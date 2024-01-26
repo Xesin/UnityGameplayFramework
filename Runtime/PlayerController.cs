@@ -19,8 +19,7 @@ namespace Xesin.GameplayFramework
         {
             inputComponent = GetComponent<InputComponent>();
             playerControllers.Add(this);
-            Cursor.lockState = GetDefaultCursorLockMode();
-            Cursor.visible = GetDefaultCursorVisibility();
+            SetDefaultCursorState();
         }
 
         protected virtual void LateUpdate()
@@ -28,19 +27,6 @@ namespace Xesin.GameplayFramework
             UpdateRotation(Time.deltaTime);
 
             rotationInput = Vector3.zero;
-        }
-
-        void OnApplicationFocus(bool hasFocus)
-        {
-            if (hasFocus)
-            {
-                Cursor.lockState = GetDefaultCursorLockMode();
-                Cursor.visible = GetDefaultCursorVisibility();
-            }
-            else
-            {
-                Debug.Log("Application lost focus");
-            }
         }
 
         private void OnDestroy()
@@ -113,6 +99,11 @@ namespace Xesin.GameplayFramework
         public InputComponent GetInputComponent()
         {
             return inputComponent;
+        }
+
+        public void SetDefaultCursorState()
+        {
+            InputManager.Instance.SetCursorState(GetDefaultCursorLockMode(), GetDefaultCursorVisibility());
         }
 
         public int GetPlayerIndex()

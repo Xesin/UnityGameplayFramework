@@ -10,13 +10,11 @@ namespace Xesin.GameplayFramework
         public bool traceCollision = true;
         public bool traceIgnoresOwner = true;
         public float traceRadius = 0.04f;
-        public bool useControlRotation = true;
         public Vector3 armOffset = Vector3.zero;
         public LayerMask traceChannels = Physics.AllLayers;
 
 
         private List<Transform> attachedObjects = new List<Transform>();
-        private Quaternion absoluteRotation = Quaternion.identity;
 
         protected override void Awake()
         {
@@ -25,30 +23,12 @@ namespace Xesin.GameplayFramework
             {
                 SetupAttachment(t);
             }
-
-            if (useAbsoluteRotation)
-            {
-                SetAbsoluteRotation(transform.rotation);
-            }
         }
 
         RaycastHit[] raycastHits = new RaycastHit[2];
 
         private void LateUpdate()
         {
-            if (useControlRotation)
-            {
-                if (Owner && Owner is Pawn pawn)
-                {
-                    transform.rotation = Quaternion.Euler(pawn.GetControlRotation());
-                }
-            }
-            else if (useAbsoluteRotation)
-            {
-                if (Application.isPlaying)
-                    transform.rotation = absoluteRotation;
-            }
-
             Vector3 armOrigin = transform.position + armOffset;
             Vector3 armDirection = -transform.forward;
             Vector3 newWorldPosition = armOrigin + armDirection * armLength;
@@ -87,11 +67,6 @@ namespace Xesin.GameplayFramework
             {
                 attachedObjects.Remove(child);
             }
-        }
-
-        public void SetAbsoluteRotation(Quaternion rotation)
-        {
-            absoluteRotation = rotation;
         }
     }
 }

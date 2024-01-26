@@ -61,7 +61,7 @@ namespace Xesin.GameplayFramework.Utils
             return instance;
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (s_Instance != null && s_Instance != this)
             {

@@ -6,8 +6,6 @@ namespace Xesin.GameplayCues
     {
         [SerializeField] protected GameplayCueNotify_BurstEffects applicationEffects;
 
-        [SerializeField] protected GameplayCueNotify_PlacementInfo defaultPlacementInfo = GameplayCueNotify_PlacementInfo.Default;
-
         protected GameplayCueNotify_SpawnResult applicationSpawnResults = new GameplayCueNotify_SpawnResult(0);
 
         protected override bool OnActive(GameObject target, GameplayCueParameters parameters)

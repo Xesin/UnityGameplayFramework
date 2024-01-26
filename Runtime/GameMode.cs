@@ -5,7 +5,12 @@ using Xesin.GameplayFramework.Utils;
 namespace Xesin.GameplayFramework
 {
 
-    public class GameMode : MonoSingleton<GameMode>
+    public class GameMode : GameModeBase<GameMode>
+    {
+
+    }
+
+    public abstract class GameModeBase<T> : MonoSingleton<T> where T : GameModeBase<T>
     {
         [field: SerializeField]
         public Pawn pawnPrefab { get; private set; }
@@ -23,11 +28,24 @@ namespace Xesin.GameplayFramework
 
         private PlayerStart[] playerStarts;
         private int lastPlayerStartIndex = -1;
+        private GameObject dummyPawn;
 
-        public virtual IEnumerator OnLevelReady()
+        private IEnumerator Start()
+        {
+            yield return OnPrepareLevel();
+            yield return OnLevelReady();
+        }
+
+        protected virtual IEnumerator OnPrepareLevel()
         {
             Instantiate(screenViewport);
             CreateInitialPlayerControllers();
+
+            yield return null;
+        }
+
+        public virtual IEnumerator OnLevelReady()
+        {
             CreateInitialPlayerPawns();
 
             yield return null;
@@ -53,12 +71,15 @@ namespace Xesin.GameplayFramework
 
         protected virtual Pawn CreatePlayerPawn(PlayerController playerController)
         {
+            if (dummyPawn)
+                Destroy(dummyPawn);
+
             Vector3 spawnPosition = Vector3.zero;
             Quaternion spawnOrientation = Quaternion.identity;
 
             var spawnPoint = GetSpawnPoint();
 
-            if(spawnPoint)
+            if (spawnPoint)
             {
                 spawnPosition = spawnPoint.position;
                 spawnOrientation = spawnPoint.rotation;
@@ -84,6 +105,18 @@ namespace Xesin.GameplayFramework
         protected virtual void CreateInitialPlayerPawns()
         {
             int numPlayers = PlayerController.GetNumPlayerControllers();
+
+            if (numPlayers == 0)
+            {
+                dummyPawn = new GameObject("DummyPawn");
+
+                if (!Camera.main)
+                    dummyPawn.AddComponent<Camera>();
+
+                dummyPawn.tag = "MainCamera";
+                dummyPawn.AddComponent<Pawn>();
+                dummyPawn.hideFlags = HideFlags.HideAndDontSave;
+            }
 
             for (int i = 0; i < numPlayers; i++)
             {
@@ -133,7 +166,7 @@ namespace Xesin.GameplayFramework
 
         public virtual Transform GetSpawnPoint()
         {
-            if(playerStarts == null) playerStarts = FindObjectsOfType<PlayerStart>();
+            if (playerStarts == null) playerStarts = FindObjectsOfType<PlayerStart>();
             if (playerStarts.Length == 0) return null;
 
 

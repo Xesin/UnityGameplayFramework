@@ -13,8 +13,8 @@ namespace Xesin.GameplayCues
         private bool hasHandledWhileActiveEvent;
         [NonSerialized]
         private bool hasHandledOnRemoveEvent;
-        [SerializeField] 
-        protected GameplayCueNotify_PlacementInfo defaultPlacementInfo;
+        [SerializeField]
+        protected GameplayCueNotify_PlacementInfo defaultPlacementInfo = GameplayCueNotify_PlacementInfo.Default;
 
         [field: SerializeField, Tooltip("Tag this notify is activated by")]
         public GameplayTag TriggerTag { get; private set; }

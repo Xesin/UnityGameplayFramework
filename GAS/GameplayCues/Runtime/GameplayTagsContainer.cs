@@ -246,12 +246,12 @@ namespace Xesin.GameplayCues
 #if UNITY_EDITOR
                 UnityEditor.AssetDatabase.CreateAsset(settings, "Assets/GameplayTags.asset");
 
-                settings.name = "GameplayTagsContainer";
+                settings.name = "GameplayTags";
                 var preloadedAssets = UnityEditor.PlayerSettings.GetPreloadedAssets();
                 UnityEditor.PlayerSettings.SetPreloadedAssets(preloadedAssets.Append(settings).ToArray());
                 UnityEditor.EditorBuildSettings.AddConfigObject(ConfigName, settings, true);
 #else
-                settings.name = "Default GameplayTagsContainer";
+                settings.name = "Default GameplayTags";
 #endif
             }
 

@@ -116,33 +116,56 @@ namespace Xesin.GameplayCues
     }
 
     [System.Serializable]
-    public struct GameplayTagContainer
+    public struct GameplayTagList
     {
-        private List<GameplayTag> tagList;
+        [SerializeField]
+        private List<GameplayTag> gameplayTags;
 
-        public static GameplayTagContainer Create()
+        public IReadOnlyList<GameplayTag> Tags => gameplayTags;
+
+        public GameplayTagList(params GameplayTag[] initialValues)
         {
-            return new GameplayTagContainer() { tagList = new List<GameplayTag>() };
+            gameplayTags = new List<GameplayTag>();
+            gameplayTags.AddRange(initialValues);
         }
 
-        public bool ContainsTag(GameplayTag gameplayTag, bool exactMatch = true)
+        public bool Contains(GameplayTag tag, bool fullMatch = true)
         {
-            for (int i = 0; i < tagList.Count; i++)
+            for (int i = 0; i < gameplayTags.Count; i++)
             {
-                if (tagList[i].MatchesTag(gameplayTag, !exactMatch)) return true;
+                if (gameplayTags[i].MatchesTag(tag, !fullMatch)) return true;
             }
 
             return false;
         }
 
-        public void AddTag(GameplayTag gameplayTag)
+        public bool Contains(GameplayTag[] tags, bool fullMatch = true)
         {
-            tagList.Add(gameplayTag);
+            int numMatches = 0;
+            for (int i = 0; i < gameplayTags.Count; i++)
+            {
+                for (int j = 0; j < tags.Length; j++)
+                {
+                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                        numMatches++;
+                }
+            }
+
+            return numMatches == tags.Length;
         }
 
-        public void RemoveTag(GameplayTag gameplayTag)
+        public bool ContainsAny(GameplayTag[] tags, bool fullMatch = true)
         {
-            tagList.Remove(gameplayTag);
+            for (int i = 0; i < gameplayTags.Count; i++)
+            {
+                for (int j = 0; j < tags.Length; j++)
+                {
+                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                        return true;
+                }
+            }
+
+            return false;
         }
     }
 
