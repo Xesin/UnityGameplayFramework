@@ -49,17 +49,20 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
         return screenViewport;
     }
 
-    public UIWidget AddToScreen(UIWidget gameObject)
+    public UIWidget AddToScreen(UIWidget gameObject, bool isPrefab = true)
     {
         if (screenViewport != null)
         {
-            return screenViewport.AddWidget(gameObject);
+            if (isPrefab)
+                return screenViewport.AddWidget(gameObject);
+            else
+                return screenViewport.AddWidgetNoInstancing(gameObject);
         }
 
         return null;
     }
 
-    public UIWidget AddToScreen(PlayerController playerController, UIWidget gameObject)
+    public UIWidget AddToScreen(PlayerController playerController, UIWidget gameObject, bool isPrefab = true)
     {
         Assert.IsNotNull(playerController, "Tried to add ui to the screen with null player controller");
 
@@ -69,7 +72,10 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
 
         if (playerViewports.ContainsKey(player))
         {
-            return playerViewports[player].AddWidget(gameObject);
+            if (isPrefab)
+                return playerViewports[player].AddWidget(gameObject);
+            else
+                return playerViewports[player].AddWidgetNoInstancing(gameObject);
         }
 
         return null;

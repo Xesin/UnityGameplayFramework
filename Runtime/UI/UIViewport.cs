@@ -25,12 +25,20 @@ public class UIViewport : MonoBehaviour
         }
     }
 
-    public UIWidget AddWidget(UIWidget gameObject)
+    public UIWidget AddWidget(UIWidget widget)
     {
-        var newWidget = Instantiate(gameObject, canvas.GetComponent<RectTransform>());
+        var newWidget = Instantiate(widget, canvas.GetComponent<RectTransform>());
         newWidget.Owner = Owner;
 
         return newWidget;
+    }
+
+    public UIWidget AddWidgetNoInstancing(UIWidget widget)
+    {
+        widget.transform.SetParent(canvas.GetComponent<RectTransform>());
+        widget.Owner = Owner;
+
+        return widget;
     }
 
     public void SetOutputCamera(Camera camera)
