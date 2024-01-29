@@ -22,7 +22,7 @@ namespace Xesin.GameplayFramework.Input
         private CursorLockMode currentLockMode = CursorLockMode.None;
         private bool cursorVisibility = true;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void InitializeOnLoad()
         {
             Instance.Initialize();
