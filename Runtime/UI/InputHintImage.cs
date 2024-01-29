@@ -34,9 +34,6 @@ namespace Xesin.GameplayFramework
                 sizeFitter = hintContainer.gameObject.AddComponent<ContentSizeFitter>();
             }
 
-            gridLayout.enabled = false;
-            sizeFitter.enabled = false;
-
             sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -79,9 +76,6 @@ namespace Xesin.GameplayFramework
 
             if (!action.bindings[bindingIndex].isComposite && !action.bindings[bindingIndex].isPartOfComposite)
             {
-                sizeFitter.enabled = false;
-                gridLayout.enabled = false;
-
                 if(isSecondaryInput && action.bindings.Count < bindingIndex + 1 && action.bindings[bindingIndex + 1].action == action.bindings[bindingIndex].action)
                 {
                     bindingIndex++;
@@ -89,6 +83,7 @@ namespace Xesin.GameplayFramework
 
                 var newImage = CreateNewImage();
                 newImage.sprite = InputImages.Instance.GetInputImage(action, bindingIndex);
+                gridLayout.constraintCount = 1;
             }
             else
             {
@@ -96,8 +91,6 @@ namespace Xesin.GameplayFramework
                     bindingIndex += 1;
 
                 int numCompositeBindings = 0;
-                sizeFitter.enabled = true;
-                gridLayout.enabled = true;
 
                 List<string> addedActions = new List<string>(4);
 
