@@ -32,6 +32,14 @@ namespace Xesin.GameplayFramework.Input
 
         private Dictionary<object, List<InputBind>> binds = new Dictionary<object, List<InputBind>>();
 
+        private void OnDestroy()
+        {
+            foreach (var bind in binds)
+            {
+                ClearBinds(bind.Key);
+            }
+        }
+
         public void Bind(object context, string actionName, Action<InputAction.CallbackContext> action, params InputActionPhase[] phases)
         {
             if (context == null)

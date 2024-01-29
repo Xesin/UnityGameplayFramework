@@ -32,13 +32,16 @@ namespace Xesin.GameplayFramework
         private void OnDestroy()
         {
             if (possesedPawn)
+            {
+                inputComponent.ClearBinds(possesedPawn);
                 possesedPawn.Restart();
+            }
 
             possesedPawn = null;
 
+
             playerControllers.Remove(this);
         }
-
 
         private void UpdateRotation(float deltaTime)
         {
