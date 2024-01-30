@@ -80,6 +80,8 @@ namespace Xesin.GameplayFramework
         protected Quaternion oldBaseRotation;
         protected Vector3 oldBaseLocation;
 
+        protected Character characterOwner;
+
         protected override void Awake()
         {
             characterController = GetComponent<CharacterController>();
@@ -96,7 +98,7 @@ namespace Xesin.GameplayFramework
             base.LateUpdate();
             Vector3 inputVector = ConsumeInputVector();
 
-            if (characterOwner)
+            if (pawnOwner)
             {
                 ControlledCharacterMove(inputVector, Time.deltaTime);
             }
@@ -167,14 +169,14 @@ namespace Xesin.GameplayFramework
             {
                 currentFloor.Clear();
 
-                if(movementMode == MovementMode.Falling)
+                if (movementMode == MovementMode.Falling)
                 {
                     decayingFormerBaseVelocity = GetImpartedMovementBaseVelocity();
                     velocity += decayingFormerBaseVelocity;
 
                     decayingFormerBaseVelocity = Vector3.zero;
                 }
-                
+
                 SetBase(null);
             }
         }
@@ -183,22 +185,22 @@ namespace Xesin.GameplayFramework
         {
             Vector3 result = Vector3.zero;
 
-            if(characterOwner)
+            if (pawnOwner)
             {
                 Transform movementBase = characterOwner.GetMovementBase();
-                if(movementBase && !movementBase.gameObject.isStatic)
+                if (movementBase && !movementBase.gameObject.isStatic)
                 {
                     Vector3 baseVelocity = Vector3.zero;
-                    if(movementBase.TryGetComponent<Rigidbody>(out var rigidbody) && !rigidbody.isKinematic)
+                    if (movementBase.TryGetComponent<Rigidbody>(out var rigidbody) && !rigidbody.isKinematic)
                     {
                         baseVelocity = rigidbody.velocity;
 
-                        Vector3 characterBasePosition = transform.position + characterController.center - ( new Vector3(0, characterController.height * 0.5f, 0));
+                        Vector3 characterBasePosition = transform.position + characterController.center - (new Vector3(0, characterController.height * 0.5f, 0));
                         Vector3 baseTangentialVelocity = GetMovementBaseTangentialVelocity(rigidbody, characterBasePosition);
 
                         baseVelocity += baseTangentialVelocity;
                     }
-                    else if(movementBase.TryGetComponent<SceneObject>(out var component))
+                    else if (movementBase.TryGetComponent<SceneObject>(out var component))
                     {
                         baseVelocity += component.Velocity;
                     }
@@ -224,7 +226,7 @@ namespace Xesin.GameplayFramework
 
         private void SetBaseFromFloor(FindFloorResult floor)
         {
-            if(floor.IsWalkableFloor())
+            if (floor.IsWalkableFloor())
             {
                 SetBase(floor.hitResult.collider.transform);
             }
@@ -273,7 +275,7 @@ namespace Xesin.GameplayFramework
                 animRootMotionVelocity = CalcAnimRootMotionVelocity(rootMotionParams.translation, deltaTime, velocity);
             }
 
-            UpdateBasedMovement(deltaTime);            
+            UpdateBasedMovement(deltaTime);
             SaveBaseLocation();
 
             characterOwner.ClearJumpInput(deltaTime);
@@ -345,7 +347,7 @@ namespace Xesin.GameplayFramework
         /// <param name="deltaTime"></param>
         protected virtual void PhysWalking(float deltaTime)
         {
-            if (!characterOwner || (!characterOwner.Controller && !rootMotionParams.HasRootMotion))
+            if (!pawnOwner || (!pawnOwner.Controller && !rootMotionParams.HasRootMotion))
             {
                 acceleration = Vector3.zero;
                 velocity = Vector3.zero;
@@ -473,7 +475,7 @@ namespace Xesin.GameplayFramework
 
             accumulatedMovement += Adjusted;
 
-            if(characterController.collisionFlags.HasFlag(CollisionFlags.Below) && !characterOwner.wasJumping) 
+            if (characterController.collisionFlags.HasFlag(CollisionFlags.Below) && !characterOwner.wasJumping)
             {
                 FindFloor(out currentFloor);
 
@@ -486,12 +488,12 @@ namespace Xesin.GameplayFramework
                 else
                 {
                     FindFloor(out var edgeFloor, 1.0f);
-                    if(edgeFloor.blockingHit && !edgeFloor.lineTrace)
+                    if (edgeFloor.blockingHit && !edgeFloor.lineTrace)
                     {
-                        characterController.Move(edgeFloor.hitResult.normal * 1.5f * deltaTime); 
+                        characterController.Move(edgeFloor.hitResult.normal * 1.5f * deltaTime);
                     }
                 }
-            }            
+            }
         }
 
         public virtual Vector3 GetFallingLateralAcceleration(float deltaTime)
@@ -605,7 +607,7 @@ namespace Xesin.GameplayFramework
 
                 return;
             }
-            else if(Physics.Raycast(sweepStart, sweepDirection, out hitInfo, sweepDistance))
+            else if (Physics.Raycast(sweepStart, sweepDirection, out hitInfo, sweepDistance))
             {
                 floorResult.hitResult = hitInfo;
                 floorResult.blockingHit = true;
@@ -646,8 +648,8 @@ namespace Xesin.GameplayFramework
             if (!HasValidData()) return;
 
             Transform movementBase = characterOwner.GetMovementBase();
-            
-            if(!movementBase)
+
+            if (!movementBase)
             {
                 SetBase(null);
                 return;
@@ -666,14 +668,14 @@ namespace Xesin.GameplayFramework
                 deltaRotation = newBaseRotation * Quaternion.Inverse(oldBaseRotation);
             }
 
-            if(rotationChanged || oldBaseLocation != newBaseLocation)
+            if (rotationChanged || oldBaseLocation != newBaseLocation)
             {
                 var oldLocalToWorldMatrix = Matrix4x4.TRS(oldBaseLocation, oldBaseRotation, Vector3.one);
                 var newLocalToWorldMatrix = Matrix4x4.TRS(newBaseLocation, newBaseRotation, Vector3.one);
 
                 Quaternion finalQuaternion = transform.rotation;
 
-                if(rotationChanged)
+                if (rotationChanged)
                 {
 
                 }
@@ -696,7 +698,7 @@ namespace Xesin.GameplayFramework
 
         private void SetBase(Transform movementBase)
         {
-            if(characterOwner)
+            if (pawnOwner)
             {
                 characterOwner.SetBase(movementBase);
             }
@@ -811,7 +813,7 @@ namespace Xesin.GameplayFramework
 
         public bool DoJump()
         {
-            if (characterOwner && characterOwner.CanJump())
+            if (pawnOwner && characterOwner.CanJump())
             {
                 velocity.y = Mathf.Max(velocity.y, jumpYVelocity);
                 SetMovementMode(MovementMode.Falling);
@@ -847,7 +849,7 @@ namespace Xesin.GameplayFramework
 
             Transform movementBase = characterOwner.GetMovementBase();
 
-            if(movementBase)
+            if (movementBase)
             {
                 oldBaseLocation = movementBase.transform.position;
                 oldBaseRotation = movementBase.transform.rotation;
