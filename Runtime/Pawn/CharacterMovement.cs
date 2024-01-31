@@ -590,8 +590,9 @@ namespace Xesin.GameplayFramework
             // Set the downward direction for the sweep test
             Vector3 sweepDirection = Vector3.down;
             Vector3 characterActualPosition = accumulatedMovement + characterController.transform.position;
-            float height = (characterController.height * 0.5f);
-            Vector3 sweepStart = characterActualPosition + (characterController.center - Vector3.up * (height - characterController.skinWidth));
+            float halfHeight = (characterController.height * 0.5f);
+            Vector3 characterCenter = characterActualPosition + characterController.center;
+            Vector3 sweepStart = characterCenter - (Vector3.up * (halfHeight - characterController.skinWidth));
             float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth + 0.05f);
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
@@ -602,7 +603,7 @@ namespace Xesin.GameplayFramework
             {
                 floorResult.hitResult = hitInfo;
                 floorResult.blockingHit = true;
-                floorResult.floorDistance = hitInfo.point.y - (characterActualPosition.y - (characterController.height * 0.5f + characterController.skinWidth));
+                floorResult.floorDistance = hitInfo.point.y - (characterCenter.y - (characterController.height * 0.5f + characterController.skinWidth));
                 floorResult.walkableFloor = true;
 
                 return;
@@ -611,7 +612,7 @@ namespace Xesin.GameplayFramework
             {
                 floorResult.hitResult = hitInfo;
                 floorResult.blockingHit = true;
-                floorResult.floorDistance = hitInfo.point.y - (characterActualPosition.y - (characterController.height * 0.5f + characterController.skinWidth));
+                floorResult.floorDistance = hitInfo.point.y - (characterCenter.y - (characterController.height * 0.5f + characterController.skinWidth));
                 floorResult.walkableFloor = true;
                 floorResult.lineTrace = true;
 
