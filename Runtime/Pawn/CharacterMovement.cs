@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
 
 namespace Xesin.GameplayFramework
 {
@@ -677,7 +678,30 @@ namespace Xesin.GameplayFramework
 
                 if (rotationChanged)
                 {
+                    Quaternion oldQuaternion = transform.rotation;
+                    Quaternion targetQuaternion = finalQuaternion * deltaRotation;
+                    Vector3 targetRotation = targetQuaternion.eulerAngles;
 
+                    characterOwner.FaceRotation(targetQuaternion.eulerAngles, 0f);
+                    finalQuaternion = transform.rotation;
+
+                    if(oldQuaternion.Equals(finalQuaternion))
+                    {
+                        if(orientToMovement)
+                        {
+                            targetRotation.z = 0;
+                            targetRotation.x = 0;
+
+                            transform.rotation = Quaternion.Euler(targetRotation);
+                        }
+                    }
+
+                    if (characterOwner.Controller)
+                    {
+                        Quaternion PawnDeltaRotation = finalQuaternion * Quaternion.Inverse(oldQuaternion);
+                        Vector3 FinalRotation = finalQuaternion.eulerAngles;
+                        UpdateBasedRotation(FinalRotation, PawnDeltaRotation.eulerAngles);
+                    }
                 }
 
                 float halfHeight = characterController.height / 2f;
@@ -692,7 +716,30 @@ namespace Xesin.GameplayFramework
                 deltaPosition = newWorldPosition - transform.position;
 
                 accumulatedMovement += deltaPosition;
-                transform.rotation = finalQuaternion * deltaRotation;
+                
+            }
+        }
+
+        private void UpdateBasedRotation(Vector3 finalRotation, Vector3 reducedRotation)
+        {
+	        Controller Controller = characterOwner ? characterOwner.Controller : null;
+            float ControllerRoll = 0f;
+
+	        if ((Controller != null))
+	        {
+		        Vector3 ControllerRot = Controller.GetControlRotation();
+                ControllerRoll = ControllerRot.z;
+		        Controller.SetControlRotation(ControllerRot + reducedRotation);
+            }
+
+            // Remove roll
+            finalRotation.z = 0f;
+	        if (Controller != null)
+	        {
+                finalRotation.z = transform.rotation.eulerAngles.z;
+		        Vector3 NewRotation = Controller.GetControlRotation();
+                NewRotation.z = ControllerRoll;
+		        Controller.SetControlRotation(NewRotation);
             }
         }
 
