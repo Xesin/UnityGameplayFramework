@@ -95,6 +95,15 @@ namespace Xesin.GameplayFramework
             SetMovementMode(MovementMode.Walking);
         }
 
+        private void FixedUpdate()
+        {
+            FindFloor(out var floor);
+            if (floor.IsWalkableFloor())
+                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
+
+            Move();
+        }
+
         protected override void LateUpdate()
         {
             base.LateUpdate();
@@ -585,9 +594,7 @@ namespace Xesin.GameplayFramework
             Vector3 rampVector = ComputeGroundMovementDelta(delta, currentFloor.hitResult, currentFloor.lineTrace);
             accumulatedMovement += rampVector;
 
-            FindFloor(out var floor);
-            if (floor.IsWalkableFloor())
-                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
+
         }
 
         RaycastHit[] hitResults = new RaycastHit[1];
@@ -610,10 +617,14 @@ namespace Xesin.GameplayFramework
             {
                 if (hitResults[0].transform != transform)
                 {
+                    floorResult.floorDistance = hitResults[0].point.y - (sweepStart.y - halfHeight - characterController.skinWidth);
+                    if (Mathf.Abs(floorResult.floorDistance) < 0.05f)
+                    {
+                        floorResult.floorDistance = 0;
+                    }
 
                     floorResult.hitResult = hitResults[0];
                     floorResult.blockingHit = true;
-                    floorResult.floorDistance = hitResults[0].point.y - (sweepStart.y - halfHeight - characterController.skinWidth);
                     floorResult.walkableFloor = true;
                     return;
                 }
