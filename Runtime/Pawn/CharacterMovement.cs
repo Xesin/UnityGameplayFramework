@@ -1,4 +1,5 @@
 using System;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework
@@ -39,7 +40,7 @@ namespace Xesin.GameplayFramework
         }
     }
 
-    [RequireComponent(typeof(CharacterController)), DefaultExecutionOrder(0)]
+    [RequireComponent(typeof(CharacterController))]
     public class CharacterMovement : PawnMovement
     {
         public float maxAcceleration = 20.48f;
@@ -285,10 +286,15 @@ namespace Xesin.GameplayFramework
             if (!rootMotionParams.HasRootMotion)
                 PhysicsRotation(deltaTime);
 
-            characterController.Move(accumulatedMovement);
-            accumulatedMovement = Vector3.zero;
+            Move();
             // Root motion has been used, clear it
             rootMotionParams.Clear();
+        }
+
+        private void Move()
+        {
+            characterController.Move(accumulatedMovement);
+            accumulatedMovement = Vector3.zero;
         }
 
         private void ApplyRootMotionToVelocity()
@@ -583,6 +589,7 @@ namespace Xesin.GameplayFramework
                 accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
         }
 
+        RaycastHit[] hitResults = new RaycastHit[1];
         public virtual void FindFloor(out FindFloorResult floorResult, float radiusScale = 0.5f)
         {
             floorResult = default;
@@ -590,33 +597,25 @@ namespace Xesin.GameplayFramework
             // Set the downward direction for the sweep test
             Vector3 sweepDirection = Vector3.down;
             Vector3 characterActualPosition = accumulatedMovement + characterController.transform.position;
+
             float halfHeight = (characterController.height * 0.5f);
             Vector3 characterCenter = characterActualPosition + characterController.center;
-            Vector3 sweepStart = characterCenter - (Vector3.up * (halfHeight - characterController.skinWidth));
-            float sweepDistance = Mathf.Max(0.024f, characterController.stepOffset + characterController.skinWidth + 0.05f);
+            Vector3 sweepStart = characterCenter;
+            float sweepDistance = Mathf.Max(0.025f, halfHeight + characterController.stepOffset + characterController.skinWidth);
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
-            Debug.DrawLine(sweepStart, sweepStart + sweepDirection * sweepDistance);
-
             // Perform the sweep test
-            if (Physics.SphereCast(sweepStart, sweepRadius, sweepDirection, out var hitInfo, sweepDistance))
+            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance) > 0)
             {
-                floorResult.hitResult = hitInfo;
-                floorResult.blockingHit = true;
-                floorResult.floorDistance = hitInfo.point.y - (characterCenter.y - (characterController.height * 0.5f + characterController.skinWidth));
-                floorResult.walkableFloor = true;
+                if (hitResults[0].transform != transform)
+                {
 
-                return;
-            }
-            else if (Physics.Raycast(sweepStart, sweepDirection, out hitInfo, sweepDistance))
-            {
-                floorResult.hitResult = hitInfo;
-                floorResult.blockingHit = true;
-                floorResult.floorDistance = hitInfo.point.y - (characterCenter.y - (characterController.height * 0.5f + characterController.skinWidth));
-                floorResult.walkableFloor = true;
-                floorResult.lineTrace = true;
-
-                return;
+                    floorResult.hitResult = hitResults[0];
+                    floorResult.blockingHit = true;
+                    floorResult.floorDistance = hitResults[0].point.y - (sweepStart.y - halfHeight - characterController.skinWidth);
+                    floorResult.walkableFloor = true;
+                    return;
+                }
             }
 
             floorResult.blockingHit = false;
