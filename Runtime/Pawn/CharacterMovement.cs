@@ -96,15 +96,6 @@ namespace Xesin.GameplayFramework
             SetMovementMode(MovementMode.Walking);
         }
 
-        private void FixedUpdate()
-        {
-            FindFloor(out var floor);
-            if (floor.IsWalkableFloor())
-                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
-
-            Move();
-        }
-
         protected override void LateUpdate()
         {
             base.LateUpdate();
@@ -595,7 +586,9 @@ namespace Xesin.GameplayFramework
             Vector3 rampVector = ComputeGroundMovementDelta(delta, currentFloor.hitResult, currentFloor.lineTrace);
             accumulatedMovement += rampVector;
 
-
+            FindFloor(out var floor);
+            if (floor.IsWalkableFloor())
+                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
         }
 
         RaycastHit[] hitResults = new RaycastHit[1];
@@ -697,9 +690,9 @@ namespace Xesin.GameplayFramework
                     characterOwner.FaceRotation(targetQuaternion.eulerAngles, 0f);
                     finalQuaternion = transform.rotation;
 
-                    if(oldQuaternion.Equals(finalQuaternion))
+                    if (oldQuaternion.Equals(finalQuaternion))
                     {
-                        if(orientToMovement)
+                        if (orientToMovement)
                         {
                             targetRotation.z = 0;
                             targetRotation.x = 0;
@@ -728,30 +721,30 @@ namespace Xesin.GameplayFramework
                 deltaPosition = newWorldPosition - transform.position;
 
                 accumulatedMovement += deltaPosition;
-                
+
             }
         }
 
         private void UpdateBasedRotation(Vector3 finalRotation, Vector3 reducedRotation)
         {
-	        Controller Controller = characterOwner ? characterOwner.Controller : null;
+            Controller Controller = characterOwner ? characterOwner.Controller : null;
             float ControllerRoll = 0f;
 
-	        if ((Controller != null))
-	        {
-		        Vector3 ControllerRot = Controller.GetControlRotation();
+            if ((Controller != null))
+            {
+                Vector3 ControllerRot = Controller.GetControlRotation();
                 ControllerRoll = ControllerRot.z;
-		        Controller.SetControlRotation(ControllerRot + reducedRotation);
+                Controller.SetControlRotation(ControllerRot + reducedRotation);
             }
 
             // Remove roll
             finalRotation.z = 0f;
-	        if (Controller != null)
-	        {
+            if (Controller != null)
+            {
                 finalRotation.z = transform.rotation.eulerAngles.z;
-		        Vector3 NewRotation = Controller.GetControlRotation();
+                Vector3 NewRotation = Controller.GetControlRotation();
                 NewRotation.z = ControllerRoll;
-		        Controller.SetControlRotation(NewRotation);
+                Controller.SetControlRotation(NewRotation);
             }
         }
 
