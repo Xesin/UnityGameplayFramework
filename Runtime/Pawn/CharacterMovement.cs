@@ -591,7 +591,6 @@ namespace Xesin.GameplayFramework
                 accumulatedMovement += new Vector3(0, floor.floorDistance, 0);
         }
 
-        RaycastHit[] hitResults = new RaycastHit[1];
         public virtual void FindFloor(out FindFloorResult floorResult, float radiusScale = 0.5f)
         {
             floorResult = default;
@@ -607,17 +606,18 @@ namespace Xesin.GameplayFramework
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
             // Perform the sweep test
-            if (Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0 || Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0)
+            if (Physics.SphereCast(sweepStart, sweepRadius, sweepDirection, out var hitResult, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) || Physics.Raycast(sweepStart, sweepDirection, out hitResult, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore))
             {
-                if (hitResults[0].transform != transform)
+                if (hitResult.transform != transform)
                 {
-                    floorResult.floorDistance = hitResults[0].point.y - (sweepStart.y - halfHeight - characterController.skinWidth);
+
+                    floorResult.floorDistance = hitResult.point.y - (sweepStart.y - halfHeight - characterController.skinWidth);
                     if (Mathf.Abs(floorResult.floorDistance) < 0.05f)
                     {
                         floorResult.floorDistance = 0;
                     }
 
-                    floorResult.hitResult = hitResults[0];
+                    floorResult.hitResult = hitResult;
                     floorResult.blockingHit = true;
                     floorResult.walkableFloor = true;
                     return;
