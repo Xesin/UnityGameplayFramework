@@ -44,6 +44,7 @@ namespace Xesin.GameplayFramework
     [RequireComponent(typeof(CharacterController))]
     public class CharacterMovement : PawnMovement
     {
+        public LayerMask validFloorLayer = ~0;
         public float maxAcceleration = 20.48f;
         public bool forceMaxAcceleration = false;
         public bool orientToMovement = false;
@@ -613,7 +614,7 @@ namespace Xesin.GameplayFramework
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
             // Perform the sweep test
-            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, ~0, QueryTriggerInteraction.Ignore) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, ~0, QueryTriggerInteraction.Ignore) > 0)
+            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0)
             {
                 if (hitResults[0].transform != transform)
                 {
