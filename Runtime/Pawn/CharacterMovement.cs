@@ -423,7 +423,7 @@ namespace Xesin.GameplayFramework
                 SetMovementMode(MovementMode.Falling);
             }
 
-            StartNewPhysics(deltaTime);
+            StartNewPhysics(0);
         }
 
         protected virtual void PhysFalling(float deltaTime)
@@ -490,7 +490,7 @@ namespace Xesin.GameplayFramework
                 if (currentFloor.IsWalkableFloor())
                 {
                     SetMovementMode(MovementMode.Walking);
-                    StartNewPhysics(deltaTime);
+                    StartNewPhysics(0);
                 }
                 // Prevents sliding if we are too close to the edge
                 else
@@ -607,7 +607,7 @@ namespace Xesin.GameplayFramework
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
             // Perform the sweep test
-            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0)
+            if (Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0 || Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, validFloorLayer, QueryTriggerInteraction.Ignore) > 0)
             {
                 if (hitResults[0].transform != transform)
                 {
@@ -906,6 +906,15 @@ namespace Xesin.GameplayFramework
                 oldBaseLocation = movementBase.transform.position;
                 oldBaseRotation = movementBase.transform.rotation;
             }
+        }
+
+        public void TeleportTo(Vector3 position)
+        {
+            characterController.enabled = false;
+
+            transform.position = position;
+
+            characterController.enabled = true;
         }
     }
 }
