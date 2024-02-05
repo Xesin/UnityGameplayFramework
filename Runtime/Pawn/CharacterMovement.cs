@@ -910,11 +910,8 @@ namespace Xesin.GameplayFramework
 
         public void TeleportTo(Vector3 position)
         {
-            characterController.enabled = false;
-
             transform.position = position;
-
-            characterController.enabled = true;
+            Physics.SyncTransforms();
         }
     }
 }
