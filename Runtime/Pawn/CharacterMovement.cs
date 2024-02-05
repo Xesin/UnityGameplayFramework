@@ -613,7 +613,7 @@ namespace Xesin.GameplayFramework
             float sweepRadius = Mathf.Max(0.02f, characterController.radius * radiusScale);
 
             // Perform the sweep test
-            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, gameObject.layer, QueryTriggerInteraction.Ignore) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, gameObject.layer, QueryTriggerInteraction.Ignore) > 0)
+            if (Physics.SphereCastNonAlloc(sweepStart, sweepRadius, sweepDirection, hitResults, sweepDistance, ~0, QueryTriggerInteraction.Ignore) > 0 || Physics.RaycastNonAlloc(sweepStart, sweepDirection, hitResults, sweepDistance, ~0, QueryTriggerInteraction.Ignore) > 0)
             {
                 if (hitResults[0].transform != transform)
                 {
