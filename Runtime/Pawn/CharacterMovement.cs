@@ -588,7 +588,7 @@ namespace Xesin.GameplayFramework
 
             FindFloor(out var floor);
             if (floor.IsWalkableFloor())
-                accumulatedMovement += new Vector3(0, currentFloor.floorDistance, 0);
+                accumulatedMovement += new Vector3(0, floor.floorDistance, 0);
         }
 
         RaycastHit[] hitResults = new RaycastHit[1];
