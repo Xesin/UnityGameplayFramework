@@ -36,7 +36,7 @@ namespace Xesin.GameplayFramework
             animator = GetComponent<Animator>();
         }
 
-        public override void SetOwner(GameplayObject obj)
+        public override void SetOwner(SceneObject obj)
         {
             base.SetOwner(obj);
             characterOwner = (Character)obj;

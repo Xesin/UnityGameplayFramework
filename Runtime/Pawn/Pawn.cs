@@ -3,13 +3,25 @@ using Xesin.GameplayFramework.Input;
 
 namespace Xesin.GameplayFramework
 {
-    public class Pawn : GameplayObject
+    public enum AutoPossesValue
+    {
+        None = -2,
+        AI = -1,
+        Player1 = 0,
+        Player2 = 1,
+        Player3 = 2,
+        Player4 = 3,
+    }
+
+    public class Pawn : SceneObject
     {
         public float BaseEyeHeight = 1.5f;
 
         public bool useControllerYaw;
         public bool useControllerPitch;
         public bool useControllerRoll;
+
+        public AutoPossesValue autoPossesOnStart = AutoPossesValue.None;
 
         public Controller Controller => currentController;
 
@@ -20,8 +32,9 @@ namespace Xesin.GameplayFramework
         private Vector3 controlInputVector;
         private Vector3 lastControlInputVector;
 
-        protected virtual void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             movementComponent = GetComponent<PawnMovement>();
             var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
 
@@ -41,6 +54,18 @@ namespace Xesin.GameplayFramework
             }
 
             Restart();
+        }
+
+        protected virtual void Start()
+        {
+            if (autoPossesOnStart == AutoPossesValue.None) return;
+            if(autoPossesOnStart == AutoPossesValue.AI)
+            {
+
+                return;
+            }
+
+
         }
 
         protected virtual void OnDestroy()

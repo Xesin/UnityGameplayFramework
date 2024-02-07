@@ -29,7 +29,7 @@ public abstract class PawnMovement : GameplayObject
     /// Sets the owner of a gameplay object as a pawn.
     /// </summary>
     /// <param name="GameplayObject">New Owner</param>
-    public override void SetOwner(GameplayObject obj)
+    public override void SetOwner(SceneObject obj)
     {
         base.SetOwner(obj);
         pawnOwner = obj as Pawn;

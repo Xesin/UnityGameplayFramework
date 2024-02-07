@@ -1,28 +1,28 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayFramework
 {
 
-    public class GameMode : GameModeBase<GameMode>
-    {
-
-    }
-
-    public abstract class GameModeBase<T> : MonoSingleton<T> where T : GameModeBase<T>
+    public class GameMode : MonoSingleton<GameMode>
     {
         [field: SerializeField]
         public Pawn pawnPrefab { get; private set; }
 
+        [field: SerializeField, FormerlySerializedAs("playerControllerPawn")]
+        public PlayerController playerController { get; private set; }
+
         [field: SerializeField]
-        public PlayerController playerControllerPawn { get; private set; }
+        public PlayerController aiController { get; private set; }
 
         [field: SerializeField]
         public ScreenViewport screenViewport { get; private set; }
 
         [field: SerializeField]
         public UIViewport playerViewport { get; private set; }
+
 
         private bool isPaused = false;
 
@@ -53,7 +53,7 @@ namespace Xesin.GameplayFramework
 
         public virtual PlayerController CreatePlayerController(LocalPlayer localPlayer)
         {
-            var player = Instantiate(playerControllerPawn);
+            var player = Instantiate(playerController);
 
             var pc = player.GetComponent<PlayerController>();
 
@@ -174,5 +174,10 @@ namespace Xesin.GameplayFramework
 
             return playerStarts[lastPlayerStartIndex].transform;
         }
+    }
+
+    public abstract class GameModeBase<T> : GameMode where T : GameModeBase<T>
+    {
+        public static new T Instance => GameMode.Instance as T;
     }
 }

@@ -105,7 +105,7 @@ namespace Xesin.GameplayFramework
             }
         }
 
-        public override void SetOwner(GameplayObject obj)
+        public override void SetOwner(SceneObject obj)
         {
             base.SetOwner(obj);
             characterOwner = obj as Character;

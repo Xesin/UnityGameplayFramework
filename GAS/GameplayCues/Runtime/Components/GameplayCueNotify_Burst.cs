@@ -8,6 +8,9 @@ namespace Xesin.GameplayCues
 
         protected GameplayCueNotify_SpawnResult applicationSpawnResults = new GameplayCueNotify_SpawnResult(0);
 
+        public GameplayTagList tagList;
+        public string test;
+
         protected override bool OnActive(GameObject target, GameplayCueParameters parameters)
         {
             GameplayCueNotify_SpawnContext context = new GameplayCueNotify_SpawnContext(target, parameters);
