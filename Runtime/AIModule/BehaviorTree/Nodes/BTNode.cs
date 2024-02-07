@@ -11,34 +11,22 @@ namespace Xesin.GameplayFramework.AI
         InProgress
     }
 
-    [Flags]
-    public enum BTBranchAction : ushort
-    {
-        None = 0x0,
-        DecoratorEvaluate = 0x1,
-        DecoratorActivate_IfNotExecuting = 0x2,
-        DecoratorActivate_EvenIfExecuting = 0x4,
-        DecoratorActivate = DecoratorActivate_IfNotExecuting | DecoratorActivate_EvenIfExecuting,
-        DecoratorDeactivate = 0x8,
-        UnregisterAuxNodes = 0x10,
-        StopTree_Safe = 0x20,
-        StopTree_Forced = 0x40,
-        ActiveNodeEvaluate = 0x80,
-        SubTreeEvaluate = 0x100,
-        ProcessPendingInitialize = 0x200,
-        Cleanup = 0x400,
-        UninitializeComponent = 0x800,
-        StopTree = StopTree_Safe | StopTree_Forced,
-        Changing_Topology_Actions = UnregisterAuxNodes | StopTree | ProcessPendingInitialize | Cleanup | UninitializeComponent,
-        All = DecoratorEvaluate | DecoratorActivate_IfNotExecuting | DecoratorActivate_EvenIfExecuting | DecoratorDeactivate | Changing_Topology_Actions | ActiveNodeEvaluate | SubTreeEvaluate,
-    }
-
-
     public class BTNode : ScriptableObject
     {
         [SerializeField] protected BehaviorTree treeAsset;
         [SerializeField] protected BTCompositeNode parentNode;
         [SerializeField] private ushort executionIndex;
+
+        protected SceneObject Owner;
+
+        public byte TreeDepth { get; private set; }
+
+        internal virtual void InitializeInSubtree(BehaviorTreeComponent ownerComp, BehaviorTree behaviorTree, int instanceIndex)
+        {
+            executionIndex += (ushort) instanceIndex;
+            SetOwner(ownerComp.Owner);
+            InitializeFromAsset(behaviorTree);
+        }
 
         public void InitializeNode(BTCompositeNode parentNode, ushort executionIndex)
         {
@@ -70,6 +58,11 @@ namespace Xesin.GameplayFramework.AI
         internal ushort GetExecutionIndex()
         {
             return executionIndex;
+        }
+
+        protected void SetOwner(SceneObject owner)
+        {
+            Owner = owner;
         }
     }
 }

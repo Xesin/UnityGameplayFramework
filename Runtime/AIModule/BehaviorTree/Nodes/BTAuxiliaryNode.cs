@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
@@ -14,9 +15,19 @@ namespace Xesin.GameplayFramework.AI
 
         }
 
-        public void InitializeParentLink(ushort InChildIndex)
+        internal BTNode GetMyNode()
         {
-            childIndex = InChildIndex;
+            return (ChildIndex == BTSpecialChild.OwnedByComposite) ? GetParentNode() : (GetParentNode() ? GetParentNode().GetChildNode(childIndex) : null);
+        }
+
+        public virtual void OnCeaseRelevant()
+        {
+            
+        }
+
+        public void OnBecomeRelevant()
+        {
+            
         }
     }
 }
