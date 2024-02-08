@@ -17,13 +17,17 @@ namespace Xesin.GameplayFramework.AI
         [SerializeField] protected BTCompositeNode parentNode;
         [SerializeField] private ushort executionIndex;
 
+#if UNITY_EDITOR
+        [SerializeField, HideInInspector] private Vector2 position;
+        [SerializeField, HideInInspector] private Guid nodeId;
+#endif
+
         protected SceneObject Owner;
 
         public byte TreeDepth { get; private set; }
 
         internal virtual void InitializeInSubtree(BehaviorTreeComponent ownerComp, BehaviorTree behaviorTree, int instanceIndex)
         {
-            executionIndex += (ushort) instanceIndex;
             SetOwner(ownerComp.Owner);
             InitializeFromAsset(behaviorTree);
         }
@@ -52,7 +56,7 @@ namespace Xesin.GameplayFramework.AI
 
         public BlackboardData GetBlackboardData()
         {
-            return treeAsset ? treeAsset.BlackboardAsset : null;
+            return treeAsset ? treeAsset.blackboardAsset : null;
         }
 
         internal ushort GetExecutionIndex()

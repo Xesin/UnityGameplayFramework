@@ -6,14 +6,9 @@ namespace Xesin.GameplayFramework.AI
 
     public class BTService : BTAuxiliaryNode
     {
-        public virtual void NotifyParentActivation()
+        public virtual void NotifyParentActivation(BehaviorTreeSearchData searchData)
         {
            
-        }
-
-        public virtual void OnBecomeRelevant(BehaviorTreeComponent behaviorTreeComponent)
-        {
-            
         }
     }
 }

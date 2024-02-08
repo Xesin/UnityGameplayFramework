@@ -146,6 +146,7 @@ namespace Xesin.GameplayFramework.Input
             {
                 playerController.PlayerInput.SwitchCurrentControlScheme(matchResult.devices.ToArray());
             }
+            matchResult.Dispose();
         }
 
         public LocalPlayer CreatePlayer(params InputDevice[] devices)

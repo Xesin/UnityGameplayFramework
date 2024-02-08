@@ -1,4 +1,5 @@
 using UnityEngine;
+using Xesin.GameplayFramework.AI;
 using Xesin.GameplayFramework.Input;
 
 namespace Xesin.GameplayFramework
@@ -20,6 +21,8 @@ namespace Xesin.GameplayFramework
         public bool useControllerYaw;
         public bool useControllerPitch;
         public bool useControllerRoll;
+
+        [SerializeField] private AIController aiController;
 
         public AutoPossesValue autoPossesOnStart = AutoPossesValue.None;
 
@@ -59,9 +62,9 @@ namespace Xesin.GameplayFramework
         protected virtual void Start()
         {
             if (autoPossesOnStart == AutoPossesValue.None) return;
-            if(autoPossesOnStart == AutoPossesValue.AI)
+            if(autoPossesOnStart == AutoPossesValue.AI && Controller == null)
             {
-
+                SpawnDefaultController();
                 return;
             }
 
@@ -76,6 +79,20 @@ namespace Xesin.GameplayFramework
         private void OnControllerColliderHit(ControllerColliderHit hit)
         {
             PushRigidBodies(hit);
+        }
+
+        public void SpawnDefaultController()
+        {
+            if(Controller != null)
+            {
+                return;
+            }
+
+            if(aiController != null)
+            {
+                AIController newController = Instantiate(aiController);
+                newController.Posses(this);
+            }
         }
 
         private void PushRigidBodies(ControllerColliderHit hit)

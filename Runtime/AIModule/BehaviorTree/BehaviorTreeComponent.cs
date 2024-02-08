@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Unity.Jobs.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
@@ -110,6 +112,7 @@ namespace Xesin.GameplayFramework.AI
 
         public bool IsRunningTree { get; protected set; } = false;
         public bool IsPausedTree { get; protected set; } = false;
+        public ushort ActiveInstanceIdx => activeInstanceIndex;
 
 
         internal List<BehaviorTree> knownInstances = new List<BehaviorTree>();
@@ -125,16 +128,391 @@ namespace Xesin.GameplayFramework.AI
         protected ushort activeInstanceIndex = 0;
         protected BehaviorTreeSearchData SearchData;
         private bool requestedFlowUpdate;
+        private bool requestedStop;
+
+        protected virtual void Awake()
+        {
+            SearchData = new BehaviorTreeSearchData(this);
+        }
 
         private void Update()
         {
-            if (!IsRunning()) return;
+            bool doneSomething = false;
+
+            for (int instanceIndex = 0; instanceIndex < knownInstances.Count; instanceIndex++)
+            {
+                knownInstances[instanceIndex].ExecuteOnEachAuxNode((auxNode) =>
+                {
+                    auxNode.TickNode(this, Time.deltaTime);
+                });
+            }
+
+            bool justFinishedLatentAborts = TrackPendingLatentAborts();
+
+            if(justFinishedLatentAborts)
+            {
+                if(requestedStop)
+                {
+                    StopTree(BTStopMode.Safe);
+                }
+                else
+                {
+                    if(executionRequest.executeNode)
+                    {
+                        pendingExecution.Lock();
+
+                        if(executionRequest.searchEnd.IsSet())
+                        {
+                            executionRequest.searchEnd = default;
+                        }
+                    }
+
+                    ScheduleExecutionUpdate();
+                }
+            }
 
             if (requestedFlowUpdate)
             {
                 ProcessExecutionRequest();
+                doneSomething = true;
+            }
+
+            if(knownInstances.Count > 0 && IsRunningTree && !IsPausedTree)
+            {
+                for (int instanceIndex = 0; instanceIndex < knownInstances.Count; instanceIndex++)
+                {
+                    knownInstances[instanceIndex].ExecuteOnEachParallelTask((taskNode, taskIndex) =>
+                    {
+                        doneSomething |= taskNode.Tick(this, Time.deltaTime);
+                    });
+                }
+
+                if(knownInstances.IsValidIndex(ActiveInstanceIdx))
+                {
+                    BehaviorTree ActiveInstance = knownInstances[ActiveInstanceIdx];
+                    if(ActiveInstance.activeNodeType == BTActiveNode.ActiveTask ||
+                        ActiveInstance.activeNodeType == BTActiveNode.AbortingTask)
+                    {
+                        BTTaskNode activeTask = (BTTaskNode) ActiveInstance.activeNode;
+                        doneSomething |= activeTask.Tick(this, Time.deltaTime);
+                    }
+                }
+
+
+                if (knownInstances.IsValidIndex(ActiveInstanceIdx + 1))
+                {
+                    BehaviorTree ActiveInstance = knownInstances[^1];
+                    if (ActiveInstance.activeNodeType == BTActiveNode.AbortingTask)
+                    {
+                        BTTaskNode activeTask = (BTTaskNode)ActiveInstance.activeNode;
+                        doneSomething |= activeTask.Tick(this, Time.deltaTime);
+                    }
+                }
             }
         }
+
+        public override bool IsRunning()
+        {
+            return IsPausedTree == false && TreeHasBeenStarted();
+        }
+
+        public override bool IsPaused()
+        {
+            return IsPausedTree;
+        }
+
+        private bool TreeHasBeenStarted()
+        {
+            return IsRunningTree && knownInstances.Count > 0;
+        }
+
+        public override void StartLogic()
+        {
+            if (IsRunningTree)
+            {
+                return;
+            }
+
+            if (!treeStartInfo.IsSet())
+            {
+                treeStartInfo.asset = defaultBehaviorTree;
+            }
+
+            if (treeStartInfo.IsSet())
+            {
+                treeStartInfo.pendingInitialize = true;
+                ProcessPendingInitialize();
+            }
+            else
+            {
+                Debug.Log("Clould not find BehaviourTree to run");
+            }
+        }
+
+        public override void RestartLogic()
+        {
+            RestartTree();
+        }
+
+        public override void StopLogic()
+        {
+            StopTree(BTStopMode.Safe);
+        }
+
+        public override void PauseLogic()
+        {
+            IsPausedTree = true;
+
+            if(blackboardComponent)
+            {
+                blackboardComponent.PauseObserverNotifications();
+            }
+        }
+
+        public override AILogicResuming ResumeLogic()
+        {
+            AILogicResuming superResumeResult = base.ResumeLogic();
+            if(IsPausedTree)
+            {
+                IsPausedTree = false;
+                
+                if(superResumeResult == AILogicResuming.Continue)
+                {
+                    if(blackboardComponent)
+                    {
+                        blackboardComponent.ResumeObserverNotifications(true);
+                    }
+
+                    bool outOfNodesPending = pendingExecution.IsSet() && pendingExecution.outOfNodes;
+
+                    if(executionRequest.executeNode || outOfNodesPending)
+                    {
+                        ScheduleExecutionUpdate();
+                    }
+
+                    return AILogicResuming.Continue;
+                }
+                else if(superResumeResult == AILogicResuming.RestartedInstead)
+                {
+                    if(blackboardComponent)
+                    {
+                        blackboardComponent.ResumeObserverNotifications(false);
+                    }
+                }
+            }
+
+            return superResumeResult;
+        }
+
+        public override void Cleanup()
+        {
+            base.Cleanup();
+
+            StopTree(BTStopMode.Forced);
+
+            RemoveAllInstances();
+
+        }
+
+        public void StartTree(BehaviorTree asset, TreeExecutionMode executeMode)
+        {
+            BehaviorTree currentRoot = GetRootTree();
+
+            if(currentRoot == asset && TreeHasBeenStarted())
+            {
+                return;
+            }
+
+            StopTree(BTStopMode.Safe);
+
+            treeStartInfo.asset = asset;
+            treeStartInfo.executeMode = executeMode;
+            treeStartInfo.pendingInitialize = true;
+
+            ProcessPendingInitialize();
+        }
+
+        public void StopTree(BTStopMode stopMode)
+        {
+            bool forceStop = stopMode == BTStopMode.Forced;
+
+            if((suspendedBranchActions & BTBranchAction.StopTree) != BTBranchAction.None)
+            {
+                pendingBranchActionRequests.Add(new BranchActionInfo(forceStop ? BTBranchAction.StopTree_Forced : BTBranchAction.StopTree_Safe));
+                return;
+            }
+
+            if(!requestedStop)
+            {
+                requestedStop = true;
+
+                for (int instanceIndex = 0; instanceIndex < knownInstances.Count; instanceIndex++)
+                {
+                    BehaviorTree instanceInfo = knownInstances[instanceIndex];
+
+                    {
+                        instanceInfo.ExecuteOnEachAuxNode((auxNode) =>
+                        {
+                            auxNode.OnCeaseRelevant(this);
+                        });
+                    }
+
+                    instanceInfo.ResetActiveAuxNodes();
+
+                    {
+                        instanceInfo.ExecuteOnEachParallelTask((task, taskIndex) =>
+                        {
+                            if(task.Status != BTTaskStatus.Active)
+                            {
+                                return;
+                            }
+
+                            BTNodeResult nodeResult = task.AbortTask(this);
+
+                            if(nodeResult == BTNodeResult.InProgress)
+                            {
+                                bool isValidForStatus = instanceInfo.IsValidParallelTaskIndex(taskIndex);
+                                if(isValidForStatus)
+                                {
+                                    instanceInfo.MarkParallelTaskAsAbortingAt(taskIndex);
+                                    waitingForLatentAborts = true;
+                                }
+                            }
+
+                            OnTaskFinished(task, nodeResult);
+                        });
+                    }
+
+                    if(instanceInfo.activeNodeType == BTActiveNode.ActiveTask)
+                    {
+                        BTTaskNode taskNode = (BTTaskNode)instanceInfo.activeNode;
+
+                        instanceInfo.activeNodeType = BTActiveNode.AbortingTask;
+
+                        BTNodeResult taskResult = taskNode.AbortTask(this);
+
+                        if(instanceInfo.activeNodeType == BTActiveNode.AbortingTask)
+                        {
+                            OnTaskFinished(taskNode, taskResult);
+                        }
+                    }
+                }
+            }
+
+            if(knownInstances.Count > 0)
+            {
+                int deactivatedChildIndex = -1;
+                BTNodeResult abortedResult = BTNodeResult.Aborted;
+                DeactivateUpTo(knownInstances[0].rootNode, (ushort) deactivatedChildIndex, abortedResult, out deactivatedChildIndex);
+            }
+
+            for (int instanceIndex = 0; instanceIndex < knownInstances.Count; instanceIndex++)
+            {
+                BehaviorTree instanceInfo = knownInstances[instanceIndex];
+                Destroy(instanceInfo);
+            }
+
+            knownInstances.Clear();
+            SearchData.Reset();
+            executionRequest = default;
+            pendingExecution = default;
+            activeInstanceIndex = 0;
+
+            requestedFlowUpdate = false;
+            requestedStop = false;
+            IsRunningTree = false;
+            IsPausedTree = false;
+            waitingForLatentAborts = false;
+        }
+
+        protected void RestartTree(BTRestartMode restartMode = BTRestartMode.ForceReevaluateRootNode)
+        {
+            if(!IsRunningTree)
+            {
+                if(treeStartInfo.IsSet())
+                {
+                    treeStartInfo.pendingInitialize = true;
+                    ProcessPendingInitialize();
+                }
+            }
+            else if(requestedStop)
+            {
+                treeStartInfo.pendingInitialize = true;
+            }
+            else if (knownInstances.Count > 0)
+            {
+                switch (restartMode)
+                {
+                    case BTRestartMode.ForceReevaluateRootNode:
+                        BehaviorTree topInstance = knownInstances[0];
+                        RequestExecution(topInstance.rootNode, 0, topInstance.rootNode, -1, BTNodeResult.Aborted);
+                        break;
+                    case BTRestartMode.CompleteRestart:
+                        treeStartInfo.asset = GetRootTree();
+                        treeStartInfo.executeMode = loopExecution ? TreeExecutionMode.Looped : TreeExecutionMode.SingleRun;
+                        treeStartInfo.pendingInitialize = true;
+
+                        ProcessPendingInitialize();
+
+                        StopTree(BTStopMode.Safe);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private bool DeactivateUpTo(BTCompositeNode node, ushort nodeInstandeIdx, BTNodeResult nodeResult, out int deactivatedChildIndex)
+        {
+            BTNode deactivatedChild = knownInstances[activeInstanceIndex].activeNode;
+            bool deactivateRoot = true;
+            deactivatedChildIndex = -1;
+            if (deactivatedChild == null && activeInstanceIndex > nodeInstandeIdx)
+            {
+                deactivatedChild = knownInstances[activeInstanceIndex].rootNode;
+                deactivateRoot = false;
+            }
+
+            while(deactivatedChild)
+            {
+                BTCompositeNode notifyParent = deactivatedChild.GetParentNode();
+
+                if(notifyParent)
+                {
+                    deactivatedChildIndex = notifyParent.GetChildIndex(SearchData, deactivatedChild);
+                    bool requestedFromValidInstance = activeInstanceIndex <= nodeInstandeIdx;
+                    notifyParent.OnChildDeactivation(SearchData, deactivatedChildIndex, nodeResult, requestedFromValidInstance);
+
+                    deactivatedChild = notifyParent;
+                }
+                else
+                {
+                    if(deactivateRoot)
+                    {
+                        knownInstances[activeInstanceIndex].rootNode.OnNodeDeactivation(SearchData, nodeResult);
+                    }
+
+                    deactivateRoot = true;
+
+                    if(activeInstanceIndex == 0)
+                    {
+                        RestartTree();
+                        return false;
+                    }
+
+                    activeInstanceIndex--;
+                    deactivatedChild = knownInstances[activeInstanceIndex].activeNode;
+                }
+
+                if(deactivatedChild == node)
+                {
+                    break;
+                }
+            }
+
+            return true;
+        }
+
 
         private void ProcessExecutionRequest()
         {
@@ -153,6 +531,187 @@ namespace Xesin.GameplayFramework.AI
             {
                 ProcessPendingExecution();
             }
+
+            bool isSearchValid = true;
+            SearchData.rollbackInstanceIdx = activeInstanceIndex;
+            SearchData.RollbackDeactivatedBranchStart = SearchData.DeactivatedBranchStart;
+            SearchData.RollbackDeactivatedBranchEnd = SearchData.DeactivatedBranchEnd;
+
+            BTNodeResult nodeResult = executionRequest.continueWithResult;
+
+            BTTaskNode nextTask = null;
+            {
+                if (knownInstances[activeInstanceIndex].activeNode != executionRequest.executeNode)
+                {
+                    int lastDeactivatedChildIndex = -1;
+                    bool deactivated = DeactivateUpTo(executionRequest.executeNode, executionRequest.executeInstanceIdx, nodeResult, out lastDeactivatedChildIndex);
+                    if(!deactivated)
+                    {
+                        SearchData.PendingUpdates.Clear();
+                        return;
+                    }
+                    else if(lastDeactivatedChildIndex != -1)
+                    {
+                        BTNodeIndex newDeactivatedBranchStart = new BTNodeIndex(executionRequest.executeInstanceIdx, executionRequest.executeNode.GetChildExecutionIndex(lastDeactivatedChildIndex, BTChildIndex.FirstNode));
+                        BTNodeIndex newDeactivatedBranchEnd = new BTNodeIndex(executionRequest.executeInstanceIdx, executionRequest.executeNode.GetChildExecutionIndex(lastDeactivatedChildIndex + 1, BTChildIndex.FirstNode));
+
+                        SearchData.DeactivatedBranchStart = newDeactivatedBranchStart;
+                        SearchData.DeactivatedBranchEnd = newDeactivatedBranchEnd;
+                    }
+                }
+            }
+
+            BehaviorTree activeInstance = knownInstances[ActiveInstanceIdx];
+            BTCompositeNode testNode = executionRequest.executeNode;
+            SearchData.AssignSearchId();
+            SearchData.postponeSearch = false;
+            SearchData.searchInProgress = true;
+            SearchData.searchRootNode = new BTNodeIndex(executionRequest.executeInstanceIdx, executionRequest.executeNode.GetExecutionIndex());
+
+            if(activeInstance.activeNode == null)
+            {
+                activeInstance.activeNode = knownInstances[ActiveInstanceIdx].rootNode;
+                activeInstance.rootNode.OnNodeActivation(SearchData);
+            }
+
+            if(!executionRequest.tryNextChild)
+            {
+                BTNodeIndex deactivateIdx = new BTNodeIndex(executionRequest.searchStart.instanceIndex, (ushort) (executionRequest.searchStart.executionIndex - 1));
+                UnregisterAuxNodesUpTo(executionRequest.searchStart.executionIndex > 0 ? deactivateIdx : executionRequest.searchStart);
+
+                executionRequest.executeNode.OnNodeRestart(SearchData);
+
+                SearchData.searchStart = executionRequest.searchStart;
+                SearchData.searchEnd = executionRequest.searchEnd;
+            }
+            else
+            {
+                if (executionRequest.continueWithResult == BTNodeResult.Failed)
+                    UnregisterAuxNodesUpTo(executionRequest.searchStart);
+
+                SearchData.searchStart = default;
+                SearchData.searchEnd = default;
+            }
+
+            while(testNode && nextTask == null)
+            {
+                int childBranchIdx = testNode.FindChildToExecute(SearchData, nodeResult);
+                BTNode storeNode = testNode;
+
+                if(SearchData.postponeSearch)
+                {
+                    testNode = null;
+                    isSearchValid = false;
+                }
+                else if(childBranchIdx == BTCompositeNode.RETURN_TO_PARENT_IDX)
+                {
+                    BTNode childNode = testNode;
+                    BTCompositeNode prevTestNode = testNode;
+
+                    testNode = testNode.GetParentNode();
+
+                    if (testNode == null)
+                    {
+                        prevTestNode.OnNodeDeactivation(SearchData, nodeResult);
+
+                        if(ActiveInstanceIdx > 0)
+                        {
+                            knownInstances[ActiveInstanceIdx].DeactivateNodes(SearchData, ActiveInstanceIdx);
+                            // Leave subtree
+                            activeInstanceIndex--;
+
+                            childNode = knownInstances[ActiveInstanceIdx].activeNode;
+                            testNode = childNode.GetParentNode();
+                        }
+
+                    }
+
+                    if(testNode)
+                    {
+                        bool requestedFromValidInstance = ActiveInstanceIdx <= executionRequest.executeInstanceIdx;
+                        testNode.OnChildDeactivation(SearchData, childNode, nodeResult, requestedFromValidInstance);
+                    }
+                }
+                else if (testNode.children.IsValidIndex(childBranchIdx))
+                {
+                    nextTask = testNode.children[childBranchIdx].childTask;
+
+                    testNode = testNode.children[childBranchIdx].childComposite;
+                }
+            }
+
+            if(nextTask)
+            {
+                BTNodeIndex nextTaskId = new BTNodeIndex(ActiveInstanceIdx, nextTask.GetExecutionIndex());
+                isSearchValid = nextTaskId.TakesPriorityOver(executionRequest.searchEnd);
+
+                if(isSearchValid && nextTask.ShouldIgnoreRestartSelf())
+                {
+                    bool isTaskRunning = knownInstances[ActiveInstanceIdx].HasActiveNode(nextTaskId.executionIndex);
+                    if(isTaskRunning)
+                    {
+                        isSearchValid = false;
+                    }
+                }
+            }
+
+            if(!isSearchValid || SearchData.postponeSearch)
+            {
+                RollbackSearchChanges();
+            }
+
+            SearchData.searchInProgress = false;
+
+            if(!SearchData.postponeSearch)
+            {
+                executionRequest = default;
+
+                pendingExecution.Unlock();
+
+                if(isSearchValid)
+                {
+                    if (knownInstances[^1].activeNodeType == BTActiveNode.ActiveTask)
+                    {
+                        SearchData.filterOutRequestFromDeactivatedBranch = true;
+
+                        AbortCurrentTask();
+
+                        SearchData.filterOutRequestFromDeactivatedBranch = false;
+                    }
+
+                    if(!pendingExecution.IsLocked())
+                    {
+                        pendingExecution.nextTask = nextTask;
+                        pendingExecution.outOfNodes = nextTask == null;
+                    }
+                }
+
+                ProcessPendingExecution();
+            }
+            else
+            {
+                ScheduleExecutionUpdate();
+            }
+        }
+
+        private void AbortCurrentTask()
+        {
+            int currentInstanceIdx = knownInstances.Count - 1;
+            BehaviorTree currentInstance = knownInstances[currentInstanceIdx];
+
+            currentInstance.activeNodeType = BTActiveNode.AbortingTask;
+
+            BTTaskNode currentTask = (BTTaskNode) currentInstance.activeNode;
+
+            SearchData.bPreserveActiveNodeMemoryOnRollback = true;
+
+            BTNodeResult taskResult = currentTask.AbortTask(this);
+
+            if(currentInstance.activeNodeType == BTActiveNode.AbortingTask &&
+                currentInstanceIdx == knownInstances.Count - 1)
+            {
+                OnTaskFinished(currentTask, taskResult);
+            }
         }
 
         private void ProcessPendingExecution()
@@ -165,6 +724,8 @@ namespace Xesin.GameplayFramework.AI
 
             BTNodeIndex nextTaskIdx = savedInfo.nextTask ? new BTNodeIndex(activeInstanceIndex, savedInfo.nextTask.GetExecutionIndex()) : new BTNodeIndex(0, 0);
             UnregisterAuxNodesUpTo(nextTaskIdx);
+
+            SuspendBranchActions(BTBranchAction.All);
 
             ApplySearchData(savedInfo.nextTask);
 
@@ -197,6 +758,11 @@ namespace Xesin.GameplayFramework.AI
             {
                 StopTree(BTStopMode.Safe);
             }
+        }
+
+        private void SuspendBranchActions(BTBranchAction branchActions)
+        {
+            suspendedBranchActions = branchActions;
         }
 
         private void ResumeBranchActions()
@@ -402,12 +968,12 @@ namespace Xesin.GameplayFramework.AI
                     if (updateInfo.mode == BTNodeUpdateMode.Remove)
                     {
                         updateInstance.RemoveFromActiveAuxNodes(updateInfo.auxNode);
-                        updateInfo.auxNode.OnCeaseRelevant();
+                        updateInfo.auxNode.OnCeaseRelevant(this);
                     }
                     else
                     {
                         updateInstance.AddToActiveAuxNodes(updateInfo.auxNode);
-                        updateInfo.auxNode.OnBecomeRelevant();
+                        updateInfo.auxNode.OnBecomeRelevant(this);
                     }
                 }
                 else if (updateInfo.taskNode)
@@ -597,11 +1163,22 @@ namespace Xesin.GameplayFramework.AI
             {
                 BTNode activeNode = GetActiveNode();
 
-                pendingBranchActionRequests.Add(new BranchActionInfo(activeNode, BTBranchAction.ActiveNodeEvaluate));
+                pendingBranchActionRequests.Add(new BranchActionInfo(activeNode, continueWithResult, BTBranchAction.ActiveNodeEvaluate));
                 return;
             }
 
             EvaluateBranch(continueWithResult);
+        }
+
+        private void RequestBranchEvaluation(BTDecorator requestedBy)
+        {
+            if((suspendedBranchActions & BTBranchAction.DecoratorEvaluate) != BTBranchAction.None)
+            {
+                pendingBranchActionRequests.Add(new BranchActionInfo(requestedBy, BTBranchAction.DecoratorEvaluate));
+                return;
+            }
+
+            EvaluateBranch(requestedBy);
         }
 
         private void ExecuteTask(BTTaskNode taskNode)
@@ -634,7 +1211,7 @@ namespace Xesin.GameplayFramework.AI
             ResumeBranchActions();
         }
 
-        private void OnTaskFinished(BTTaskNode taskNode, BTNodeResult taskResult)
+        public void OnTaskFinished(BTTaskNode taskNode, BTNodeResult taskResult)
         {
             if (taskNode == null || knownInstances.Count == 0 || !this)
             {
@@ -657,7 +1234,7 @@ namespace Xesin.GameplayFramework.AI
 
                     if (!wasAborting)
                     {
-                        RequestBranchEvaluation(taskResult);
+                        RequestExecution(taskResult);
                     }
                 }
                 else if (taskResult == BTNodeResult.Aborted && knownInstances.IsValidIndex(taskInstanceIdx) && knownInstances[taskInstanceIdx].activeNode == taskNode)
@@ -672,6 +1249,18 @@ namespace Xesin.GameplayFramework.AI
             {
                 ProcessPendingInitialize();
             }
+        }
+
+        private bool TrackPendingLatentAborts()
+        {
+            if(!waitingForLatentAborts)
+            {
+                return false;
+            }
+
+            waitingForLatentAborts = HasActiveLatentAborts();
+
+            return !waitingForLatentAborts;
         }
 
         private void TrackNewLatentAborts()
@@ -761,29 +1350,6 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
-        public override void StartLogic()
-        {
-            if (IsRunningTree)
-            {
-                return;
-            }
-
-            if (!treeStartInfo.IsSet())
-            {
-                treeStartInfo.asset = defaultBehaviorTree;
-            }
-
-            if (treeStartInfo.IsSet())
-            {
-                treeStartInfo.pendingInitialize = true;
-                ProcessPendingInitialize();
-            }
-            else
-            {
-                Debug.Log("Clould not find BehaviourTree to run");
-            }
-        }
-
         private void ProcessPendingInitialize()
         {
             if ((suspendedBranchActions & BTBranchAction.ProcessPendingInitialize) != BTBranchAction.None)
@@ -809,7 +1375,7 @@ namespace Xesin.GameplayFramework.AI
 
         protected bool PushInstance(BehaviorTree treeAsset)
         {
-            if (treeAsset.BlackboardAsset && blackboardComponent && !blackboardComponent.IsCompatibleWith(treeAsset.BlackboardAsset))
+            if (treeAsset.blackboardAsset && blackboardComponent && !blackboardComponent.IsCompatibleWith(treeAsset.blackboardAsset))
             {
                 return false;
             }
@@ -827,12 +1393,23 @@ namespace Xesin.GameplayFramework.AI
             for (int i = 0; i < rootNode.services.Count; i++)
             {
                 var serviceNode = rootNode.services[i];
-                serviceNode.NotifyParentActivation();
+                serviceNode.NotifyParentActivation(SearchData);
             }
 
             RequestExecution(rootNode, activeInstanceIndex, rootNode, 0, BTNodeResult.InProgress);
 
             return true;
+        }
+
+        public void RequestExecution(BTDecorator requestedBy)
+        {
+            if(requestedBy)
+                RequestBranchEvaluation(requestedBy);
+        }
+
+        public void RequestExecution(BTNodeResult continueWithResult)
+        {
+            RequestBranchEvaluation(continueWithResult);
         }
 
         private void RequestExecution(BTCompositeNode RequestedOn, int instanceIndex, BTNode RequestedBy, int requestedByChildIndex, BTNodeResult continueWithResult)
@@ -1027,7 +1604,7 @@ namespace Xesin.GameplayFramework.AI
             {
                 bool shouldCheckDecorators =
                     RequestedOn.children.IsValidIndex(requestedByChildIndex) &&
-                    (RequestedOn.children[requestedByChildIndex].decoratorsOps.Count > 0)
+                    (RequestedOn.children[requestedByChildIndex].DecoratorsOp.Count > 0)
                     && RequestedBy is BTDecorator;
 
                 bool canExecute = shouldCheckDecorators && RequestedOn.DoDecoratorsAllowExecution(this, instanceIdx, requestedByChildIndex);
@@ -1075,6 +1652,12 @@ namespace Xesin.GameplayFramework.AI
                 RollbackSearchChanges();
             }
 
+            if (bScheduleNewSearch)
+                ScheduleExecutionUpdate();
+        }
+
+        private void ScheduleExecutionUpdate()
+        {
             requestedFlowUpdate = true;
         }
 
@@ -1093,11 +1676,6 @@ namespace Xesin.GameplayFramework.AI
                 // apply new observer changes
                 ApplyDiscardedSearch();
             }
-        }
-
-        private BTNode GetActiveNode()
-        {
-            return knownInstances.Count > 0 ? knownInstances[activeInstanceIndex].activeNode : null;
         }
 
         private void FindCommonParent(List<BehaviorTree> Instances, BTCompositeNode InNodeA, ushort InstanceIdxA, BTCompositeNode InNodeB, ushort InstanceIdxB, out BTCompositeNode CommonParentNode, out ushort CommonInstanceIdx)
@@ -1175,44 +1753,13 @@ namespace Xesin.GameplayFramework.AI
                         }
                     }
                 }
-            }
-            else
-            {
-                instanceIdx = activeInstanceIndex;
+                else
+                {
+                    instanceIdx = activeInstanceIndex;
+                }
             }
 
             return instanceIdx;
-        }
-
-        public override void RestartLogic()
-        {
-
-        }
-
-        public override void StopLogic()
-        {
-
-        }
-
-        public override void PauseLogic()
-        {
-
-        }
-
-        public override void ResumeLogic()
-        {
-
-        }
-
-
-        protected void StopTree(BTStopMode bTStopMode)
-        {
-
-        }
-
-        protected void RestartTree()
-        {
-
         }
 
         public bool IsExecutingBranch(BTNode node, int childIndex)
@@ -1235,6 +1782,21 @@ namespace Xesin.GameplayFramework.AI
             ushort nextChildExecutionIdx = node.GetParentNode().GetChildExecutionIndex(childIndex + 1);
 
             return (activeExecutionIdx >= node.GetExecutionIndex()) && (activeExecutionIdx < nextChildExecutionIdx);
+        }
+
+        internal bool IsRestartPending()
+        {
+            return executionRequest.executeNode && !executionRequest.tryNextChild;
+        }
+
+        private BTNode GetActiveNode()
+        {
+            return knownInstances.Count > 0 ? knownInstances[activeInstanceIndex].activeNode : null;
+        }
+
+        private BehaviorTree GetRootTree()
+        {
+            return knownInstances.Count > 0 ? knownInstances[0] : null;
         }
     }
 }

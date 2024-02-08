@@ -1,8 +1,16 @@
 namespace Xesin.GameplayFramework.AI
 {
+    public enum AILogicResuming
+    {
+        Continue,
+        RestartedInstead
+    }
+
     public class BrainComponent : GameplayObject
     {
         protected BlackboardComponent blackboardComponent;
+
+        private bool doLogicResatartOnUnlock = false;
 
         protected virtual void Start()
         {
@@ -23,8 +31,16 @@ namespace Xesin.GameplayFramework.AI
         public virtual void Cleanup() { }
 
         public virtual void PauseLogic() { }
-        public virtual void ResumeLogic()
+        public virtual AILogicResuming ResumeLogic()
         {
+            if(doLogicResatartOnUnlock)
+            {
+                doLogicResatartOnUnlock = false;
+                RestartLogic();
+                return AILogicResuming.RestartedInstead;
+            }
+
+            return AILogicResuming.Continue;
         }
 
         public virtual bool IsRunning()
@@ -64,6 +80,11 @@ namespace Xesin.GameplayFramework.AI
             }
 
             return component;
+        }
+
+        public void RequestLogicRestartOnUnlock()
+        {
+            doLogicResatartOnUnlock = true;
         }
     }
 }

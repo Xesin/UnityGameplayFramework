@@ -7,7 +7,7 @@ namespace Xesin.GameplayFramework
     {
         public static bool IsValidIndex<T>(this IList<T> list, int index)
         {
-            return list.Count < index;
+            return list.Count > index && index >= 0;
         }
     }
 }

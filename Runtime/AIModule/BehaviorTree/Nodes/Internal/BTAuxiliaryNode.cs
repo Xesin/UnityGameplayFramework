@@ -15,19 +15,19 @@ namespace Xesin.GameplayFramework.AI
 
         }
 
+        public virtual void OnBecomeRelevant(BehaviorTreeComponent ownerComp)
+        {
+            
+        }
+
+        public virtual void OnCeaseRelevant(BehaviorTreeComponent ownerComp)
+        {
+            
+        }
+
         internal BTNode GetMyNode()
         {
             return (ChildIndex == BTSpecialChild.OwnedByComposite) ? GetParentNode() : (GetParentNode() ? GetParentNode().GetChildNode(childIndex) : null);
-        }
-
-        public virtual void OnCeaseRelevant()
-        {
-            
-        }
-
-        public void OnBecomeRelevant()
-        {
-            
         }
     }
 }

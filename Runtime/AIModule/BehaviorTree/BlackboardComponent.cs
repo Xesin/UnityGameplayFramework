@@ -12,6 +12,9 @@ namespace Xesin.GameplayFramework.AI
         private BlackboardData blackboardAsset;
 
         private Dictionary<Blackbloard.Key, Action<Blackbloard.Key>> observers = new Dictionary<Blackbloard.Key, Action<Blackbloard.Key>>();
+        private Queue<Blackbloard.Key> queuedNotifies = new Queue<Blackbloard.Key>();
+
+        private bool pausesNotifies = false;
 
         protected virtual void Start()
         {
@@ -30,16 +33,24 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
-        private bool InitializeBlackboard(BlackboardData newAsset)
+        internal bool InitializeBlackboard(BlackboardData newAsset)
         {
             if (newAsset == blackboardAsset)
             {
                 return true;
             }
 
+            if (blackboardAsset)
+            {
+                DestroyValues();
+            }
+
             blackboardAsset = newAsset;
 
-            return true;
+            if (blackboardAsset)
+                return true;
+            else
+                return false;
         }
 
         public string GetKeyName(Blackbloard.Key keyID)
@@ -157,8 +168,15 @@ namespace Xesin.GameplayFramework.AI
 
         private void NotifyObservers(Blackbloard.Key keyID)
         {
-            if (observers.ContainsKey(keyID))
-                observers[keyID]?.Invoke(keyID);
+            if (pausesNotifies)
+            {
+                queuedNotifies.Enqueue(keyID);
+            }
+            else
+            {
+                if (observers.ContainsKey(keyID))
+                    observers[keyID]?.Invoke(keyID);
+            }
         }
 
         public bool IsCompatibleWith(BlackboardData blackboardAsset)
@@ -183,6 +201,36 @@ namespace Xesin.GameplayFramework.AI
             }
 
             return hasAllKeysInSameOrder;
+        }
+
+        public void PauseObserverNotifications()
+        {
+            pausesNotifies = true;
+        }
+
+        public void ResumeObserverNotifications(bool sendQueuedObserverNotifications)
+        {
+            pausesNotifies = false;
+
+            if(sendQueuedObserverNotifications)
+            {
+                while(queuedNotifies.Count > 0)
+                {
+                    NotifyObservers(queuedNotifies.Dequeue());
+                }
+            }
+
+            queuedNotifies.Clear();
+        }
+
+
+
+        private void DestroyValues()
+        {
+            for (int i = 0; i < blackboardAsset.Keys.Length; i++)
+            {
+                blackboardAsset.Keys[i].Clear();
+            }
         }
     }
 }

@@ -7,8 +7,9 @@ namespace Xesin.GameplayFramework.AI
 
     public abstract class BTTaskNode : BTNode
     {
-        public List<BTService> services = new List<BTService>();
+        [SerializeField] private bool ignoreRestartSelf = false;
 
+        public List<BTService> services = new List<BTService>();
         public BTTaskStatus Status { get; set; }
 
         public virtual BTNodeResult AbortTask(BehaviorTreeComponent behaviorTreeComponent)
@@ -21,13 +22,23 @@ namespace Xesin.GameplayFramework.AI
             return BTNodeResult.Succeeded;
         }
 
-        internal virtual void Tick(BehaviorTreeComponent ownerComp, float deltaSeconds)
+        internal virtual bool Tick(BehaviorTreeComponent ownerComp, float deltaSeconds)
         {
-
+            return true;
         }
 
         public virtual void OnTaskFinished(BehaviorTreeComponent behaviorTreeComponent, BTNodeResult taskResult)
         {
+        }
+
+        public void FinishLatentTask(BehaviorTreeComponent ownerComp, BTNodeResult taskResult)
+        {
+            ownerComp.OnTaskFinished(this, taskResult);
+        }
+
+        internal bool ShouldIgnoreRestartSelf()
+        {
+            return ignoreRestartSelf;
         }
     }
 }

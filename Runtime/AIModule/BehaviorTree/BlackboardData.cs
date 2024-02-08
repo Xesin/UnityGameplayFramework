@@ -9,7 +9,6 @@ namespace Xesin.GameplayFramework.AI
         public string entryName;
 
         private object internalValue;
-
         public object Value
         {
             get => internalValue;
@@ -19,6 +18,7 @@ namespace Xesin.GameplayFramework.AI
 
                 internalValue = value;
                 valueType = value.GetType();
+                valueIsSet = true;
             }
         }
 
@@ -51,6 +51,9 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
+        private bool valueIsSet;
+        public bool IsSet => valueIsSet;
+
         public bool IsValid()
         {
             return entryName != null && ValueType != null;
@@ -67,8 +70,15 @@ namespace Xesin.GameplayFramework.AI
         {
             return HashCode.Combine(entryName, ValueType);
         }
+
+        internal void Clear()
+        {
+            internalValue = default;
+            valueIsSet = false;
+        }
     }
 
+    [CreateAssetMenu(fileName = "NewBlackboard.asset", menuName = "Gameplay/AI/Blackboard")]
     public class BlackboardData : ScriptableObject
     {
         public BlackboardEntry[] Keys = new BlackboardEntry[0];

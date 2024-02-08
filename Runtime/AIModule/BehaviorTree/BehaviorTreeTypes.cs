@@ -18,6 +18,12 @@ namespace Xesin.GameplayFramework.AI
         Forced,
     }
 
+    public enum BTRestartMode
+    {
+        ForceReevaluateRootNode,
+        CompleteRestart,
+    }
+
     public enum BTFlowAbortMode
     {
         None,
@@ -129,12 +135,14 @@ namespace Xesin.GameplayFramework.AI
 
     public struct BehaviorTreeSearchData
     {
+        private static int NextSearchId = 1;
+
         public BehaviorTreeComponent ownerComp;
 
         public List<BehaviorTreeSearchUpdate> PendingUpdates;
 
         public BTNodeIndex searchRootNode;
-        public BTNodeIndex searchstart;
+        public BTNodeIndex searchStart;
         public BTNodeIndex searchEnd;
 
         public int searchId;
@@ -163,7 +171,7 @@ namespace Xesin.GameplayFramework.AI
             bPreserveActiveNodeMemoryOnRollback = false;
 
             searchRootNode = default;
-            searchstart = default;
+            searchStart = default;
             searchEnd = default;
 
             searchId = 0;
@@ -209,6 +217,31 @@ namespace Xesin.GameplayFramework.AI
                 updateInfo.postUpdate = (updateInfo.mode == BTNodeUpdateMode.Add) && (updateInfo.auxNode is BTService);
                 PendingUpdates.Add(updateInfo);
             }
+        }
+
+        public void AssignSearchId()
+        {
+            searchId = NextSearchId;
+            NextSearchId++;
+        }
+
+        internal void Reset()
+        {
+            PendingUpdates.Clear();
+            rollbackInstanceIdx = -1;
+            filterOutRequestFromDeactivatedBranch = false;
+            postponeSearch = false;
+            searchInProgress = false;
+            bPreserveActiveNodeMemoryOnRollback = false;
+
+            searchRootNode = default;
+            searchStart = default;
+            searchEnd = default;
+
+            DeactivatedBranchStart = default;
+            DeactivatedBranchEnd = default;
+            RollbackDeactivatedBranchStart = default;
+            RollbackDeactivatedBranchEnd = default;
         }
     }
 
