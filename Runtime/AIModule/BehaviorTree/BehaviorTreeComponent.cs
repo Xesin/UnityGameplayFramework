@@ -36,7 +36,7 @@ namespace Xesin.GameplayFramework.AI
         public BTNodeIndex searchEnd;
 
         /** node to be executed */
-        public BTCompositeNode executeNode;
+        public BTComposite executeNode;
 
         /** subtree index */
         public ushort executeInstanceIdx;
@@ -50,7 +50,7 @@ namespace Xesin.GameplayFramework.AI
         /** if set, request was not instigated by finishing task/initialization but is a restart (e.g. decorator) */
         public bool isRestart;
 
-        public BTNodeExecutionInfo(BTCompositeNode InExecuteNode = null)
+        public BTNodeExecutionInfo(BTComposite InExecuteNode = null)
         {
             tryNextChild = false;
             isRestart = false;
@@ -65,7 +65,7 @@ namespace Xesin.GameplayFramework.AI
     public struct BTPendingExecutionInfo
     {
         /** next task to execute */
-        public BTTaskNode nextTask;
+        public BTTask nextTask;
 
         /** if set, tree ran out of nodes */
         public bool outOfNodes;
@@ -73,7 +73,7 @@ namespace Xesin.GameplayFramework.AI
         /** if set, request can't be executed */
         public bool locked;
 
-        BTPendingExecutionInfo(BTTaskNode inNextTask = null)
+        BTPendingExecutionInfo(BTTask inNextTask = null)
         {
             nextTask = inNextTask;
             outOfNodes = false;
@@ -209,7 +209,7 @@ namespace Xesin.GameplayFramework.AI
                     if (ActiveInstance.activeNodeType == BTActiveNode.ActiveTask ||
                         ActiveInstance.activeNodeType == BTActiveNode.AbortingTask)
                     {
-                        BTTaskNode activeTask = (BTTaskNode)ActiveInstance.activeNode;
+                        BTTask activeTask = (BTTask)ActiveInstance.activeNode;
                         doneSomething |= activeTask.WrappedTick(this, deltaTime, ref NextNeededDeltaTime);
                     }
                 }
@@ -220,7 +220,7 @@ namespace Xesin.GameplayFramework.AI
                     BehaviorTree ActiveInstance = knownInstances[^1];
                     if (ActiveInstance.activeNodeType == BTActiveNode.AbortingTask)
                     {
-                        BTTaskNode activeTask = (BTTaskNode)ActiveInstance.activeNode;
+                        BTTask activeTask = (BTTask)ActiveInstance.activeNode;
                         doneSomething |= activeTask.WrappedTick(this, deltaTime, ref NextNeededDeltaTime);
                     }
                 }
@@ -401,7 +401,7 @@ namespace Xesin.GameplayFramework.AI
 
                     if (instanceInfo.activeNodeType == BTActiveNode.ActiveTask)
                     {
-                        BTTaskNode taskNode = (BTTaskNode)instanceInfo.activeNode;
+                        BTTask taskNode = (BTTask)instanceInfo.activeNode;
 
                         instanceInfo.activeNodeType = BTActiveNode.AbortingTask;
 
@@ -478,7 +478,7 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
-        private bool DeactivateUpTo(BTCompositeNode node, ushort nodeInstandeIdx, BTNodeResult nodeResult, out int deactivatedChildIndex)
+        private bool DeactivateUpTo(BTComposite node, ushort nodeInstandeIdx, BTNodeResult nodeResult, out int deactivatedChildIndex)
         {
             BTNode deactivatedChild = knownInstances[activeInstanceIndex].activeNode;
             bool deactivateRoot = true;
@@ -491,7 +491,7 @@ namespace Xesin.GameplayFramework.AI
 
             while (deactivatedChild)
             {
-                BTCompositeNode notifyParent = deactivatedChild.GetParentNode();
+                BTComposite notifyParent = deactivatedChild.GetParentNode();
 
                 if (notifyParent)
                 {
@@ -555,7 +555,7 @@ namespace Xesin.GameplayFramework.AI
 
             BTNodeResult nodeResult = executionRequest.continueWithResult;
 
-            BTTaskNode nextTask = null;
+            BTTask nextTask = null;
             {
                 if (knownInstances[activeInstanceIndex].activeNode != executionRequest.executeNode)
                 {
@@ -578,7 +578,7 @@ namespace Xesin.GameplayFramework.AI
             }
 
             BehaviorTree activeInstance = knownInstances[ActiveInstanceIdx];
-            BTCompositeNode testNode = executionRequest.executeNode;
+            BTComposite testNode = executionRequest.executeNode;
             SearchData.AssignSearchId();
             SearchData.postponeSearch = false;
             SearchData.searchInProgress = true;
@@ -619,10 +619,10 @@ namespace Xesin.GameplayFramework.AI
                     testNode = null;
                     isSearchValid = false;
                 }
-                else if (childBranchIdx == BTCompositeNode.RETURN_TO_PARENT_IDX)
+                else if (childBranchIdx == BTComposite.RETURN_TO_PARENT_IDX)
                 {
                     BTNode childNode = testNode;
-                    BTCompositeNode prevTestNode = testNode;
+                    BTComposite prevTestNode = testNode;
 
                     testNode = testNode.GetParentNode();
 
@@ -717,7 +717,7 @@ namespace Xesin.GameplayFramework.AI
 
             currentInstance.activeNodeType = BTActiveNode.AbortingTask;
 
-            BTTaskNode currentTask = (BTTaskNode)currentInstance.activeNode;
+            BTTask currentTask = (BTTask)currentInstance.activeNode;
 
             SearchData.bPreserveActiveNodeMemoryOnRollback = true;
 
@@ -836,7 +836,7 @@ namespace Xesin.GameplayFramework.AI
                             }
                         case BTBranchAction.UnregisterAuxNodes:
                             {
-                                BTCompositeNode branchRoot = (BTCompositeNode)info.node;
+                                BTComposite branchRoot = (BTComposite)info.node;
                                 UnregisterAuxNodesInBranch(branchRoot, true);
                                 break;
                             }
@@ -857,7 +857,7 @@ namespace Xesin.GameplayFramework.AI
                             }
                         case BTBranchAction.SubTreeEvaluate:
                             {
-                                BTCompositeNode branchRoot = (BTCompositeNode)info.node;
+                                BTComposite branchRoot = (BTComposite)info.node;
                                 BTNode rootNode = knownInstances.Count > 0 ? knownInstances[activeInstanceIndex].rootNode : null;
                                 if (rootNode != branchRoot)
                                 {
@@ -901,7 +901,7 @@ namespace Xesin.GameplayFramework.AI
             knownInstances.Clear();
         }
 
-        private void UnregisterAuxNodesInBranch(BTCompositeNode node, bool applyImmediately)
+        private void UnregisterAuxNodesInBranch(BTComposite node, bool applyImmediately)
         {
             int instanceIdx = FindInstanceContainingNode(node);
 
@@ -1060,7 +1060,7 @@ namespace Xesin.GameplayFramework.AI
                 }
             }
 
-            BTCompositeNode branchRoot = requestedBy.GetParentNode().children[requestedBy.ChildIndex].childComposite;
+            BTComposite branchRoot = requestedBy.GetParentNode().children[requestedBy.ChildIndex].childComposite;
             if (branchRoot)
             {
                 if ((suspendedBranchActions & BTBranchAction.UnregisterAuxNodes) != BTBranchAction.None)
@@ -1162,8 +1162,8 @@ namespace Xesin.GameplayFramework.AI
             if (knownInstances.IsValidIndex(activeInstanceIndex))
             {
                 BehaviorTree activeInstance = knownInstances[activeInstanceIndex];
-                BTCompositeNode executeParent = (activeInstance.activeNode == null) ? activeInstance.rootNode :
-                    (activeInstance.activeNodeType == BTActiveNode.Composite) ? (BTCompositeNode)activeInstance.activeNode :
+                BTComposite executeParent = (activeInstance.activeNode == null) ? activeInstance.rootNode :
+                    (activeInstance.activeNodeType == BTActiveNode.Composite) ? (BTComposite)activeInstance.activeNode :
                     activeInstance.activeNode.GetParentNode();
 
                 RequestExecution(executeParent, activeInstanceIndex, activeInstance.activeNode ? activeInstance.activeNode : activeInstance.rootNode, -1, continueWithResult);
@@ -1197,7 +1197,7 @@ namespace Xesin.GameplayFramework.AI
             EvaluateBranch(requestedBy);
         }
 
-        private void ExecuteTask(BTTaskNode taskNode)
+        private void ExecuteTask(BTTask taskNode)
         {
             BehaviorTree activeInstance = knownInstances[activeInstanceIndex];
 
@@ -1227,7 +1227,7 @@ namespace Xesin.GameplayFramework.AI
             ResumeBranchActions();
         }
 
-        public void OnTaskFinished(BTTaskNode taskNode, BTNodeResult taskResult)
+        public void OnTaskFinished(BTTask taskNode, BTNodeResult taskResult)
         {
             if (taskNode == null || knownInstances.Count == 0 || !this)
             {
@@ -1429,7 +1429,7 @@ namespace Xesin.GameplayFramework.AI
             RequestBranchEvaluation(continueWithResult);
         }
 
-        private void RequestExecution(BTCompositeNode RequestedOn, int instanceIndex, BTNode RequestedBy, int requestedByChildIndex, BTNodeResult continueWithResult)
+        private void RequestExecution(BTComposite RequestedOn, int instanceIndex, BTNode RequestedBy, int requestedByChildIndex, BTNodeResult continueWithResult)
         {
             if (!IsRunningTree || instanceIndex >= knownInstances.Count)
             {
@@ -1457,7 +1457,7 @@ namespace Xesin.GameplayFramework.AI
                 {
                     var info = pendingBranchActionRequests[i];
 
-                    BTCompositeNode branchRoot = null;
+                    BTComposite branchRoot = null;
                     switch (info.action)
                     {
                         case BTBranchAction.DecoratorDeactivate:
@@ -1470,7 +1470,7 @@ namespace Xesin.GameplayFramework.AI
                             }
                             break;
                         case BTBranchAction.UnregisterAuxNodes:
-                            if (info.node is BTCompositeNode compNode)
+                            if (info.node is BTComposite compNode)
                             {
                                 branchRoot = compNode;
                             }
@@ -1556,30 +1556,30 @@ namespace Xesin.GameplayFramework.AI
                     Debug.Log("skip: decorators are not allowing execution");
                 }
 
-                BTCompositeNode currentNode = executionRequest.executeNode;
+                BTComposite currentNode = executionRequest.executeNode;
                 ushort currentInstanceIdx = executionRequest.executeInstanceIdx;
 
                 if (executionRequest.executeNode == null)
                 {
                     BehaviorTree activeInstance = knownInstances[activeInstanceIndex];
                     currentNode = (activeInstance.activeNode == null) ? activeInstance.rootNode :
-                        (activeInstance.activeNodeType == BTActiveNode.Composite) ? activeInstance.activeNode as BTCompositeNode : activeInstance.activeNode.GetParentNode();
+                        (activeInstance.activeNodeType == BTActiveNode.Composite) ? activeInstance.activeNode as BTComposite : activeInstance.activeNode.GetParentNode();
 
                     currentInstanceIdx = activeInstanceIndex;
                 }
 
                 if (executionRequest.executeNode != RequestedOn)
                 {
-                    BTCompositeNode commonParent = null;
+                    BTComposite commonParent = null;
                     ushort commonInstanceIdx = ushort.MaxValue;
 
                     FindCommonParent(knownInstances, RequestedOn, instanceIdx, currentNode, currentInstanceIdx, out commonParent, out commonInstanceIdx);
 
                     int itInstanceIdx = instanceIndex;
 
-                    for (BTCompositeNode It = RequestedOn; It && It != commonParent;)
+                    for (BTComposite It = RequestedOn; It && It != commonParent;)
                     {
-                        BTCompositeNode parentNode = It.GetParentNode();
+                        BTComposite parentNode = It.GetParentNode();
 
                         int childIdx = -1;
 
@@ -1701,13 +1701,13 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
-        private void FindCommonParent(List<BehaviorTree> Instances, BTCompositeNode InNodeA, ushort InstanceIdxA, BTCompositeNode InNodeB, ushort InstanceIdxB, out BTCompositeNode CommonParentNode, out ushort CommonInstanceIdx)
+        private void FindCommonParent(List<BehaviorTree> Instances, BTComposite InNodeA, ushort InstanceIdxA, BTComposite InNodeB, ushort InstanceIdxB, out BTComposite CommonParentNode, out ushort CommonInstanceIdx)
         {
             // find two nodes in the same instance (choose lower index = closer to root)
             CommonInstanceIdx = (InstanceIdxA <= InstanceIdxB) ? InstanceIdxA : InstanceIdxB;
 
-            BTCompositeNode NodeA = (CommonInstanceIdx == InstanceIdxA) ? InNodeA : Instances[CommonInstanceIdx].activeNode.GetParentNode();
-            BTCompositeNode NodeB = (CommonInstanceIdx == InstanceIdxB) ? InNodeB : Instances[CommonInstanceIdx].activeNode.GetParentNode();
+            BTComposite NodeA = (CommonInstanceIdx == InstanceIdxA) ? InNodeA : Instances[CommonInstanceIdx].activeNode.GetParentNode();
+            BTComposite NodeB = (CommonInstanceIdx == InstanceIdxB) ? InNodeB : Instances[CommonInstanceIdx].activeNode.GetParentNode();
 
             // special case: node was taken from CommonInstanceIdx, but it had ActiveNode set to root (no parent)
             if (!NodeA && CommonInstanceIdx != InstanceIdxA)

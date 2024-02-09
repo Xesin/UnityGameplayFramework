@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
@@ -15,16 +16,19 @@ namespace Xesin.GameplayFramework.AI
     public class BehaviorTree : ScriptableObject
     {
         public BlackboardData blackboardAsset;
-        public BTCompositeNode rootNode;
-        public List<BTNode> nodes;
+        public BTComposite rootNode;
+
+#if UNITY_EDITOR
+        public List<BTCompositeChild> compositeNodes = new List<BTCompositeChild>();
+#endif
 
         [NonSerialized] public BTNode activeNode;
         [NonSerialized] public BTActiveNode activeNodeType;
 
         public List<BTAuxiliaryNode> ActiveAuxNodes { get; private set; } = new List<BTAuxiliaryNode>();
-        public List<BTTaskNode> ParallelTasks { get; private set; } = new List<BTTaskNode>();
+        public List<BTTask> ParallelTasks { get; private set; } = new List<BTTask>();
 
-        internal void Initialize(BehaviorTreeComponent ownerComp, BTCompositeNode Node, int instanceIndex)
+        internal void Initialize(BehaviorTreeComponent ownerComp, BTComposite Node, int instanceIndex)
         {
             for (int serviceIndex = 0; serviceIndex < Node.services.Count; serviceIndex++)
             {
@@ -75,7 +79,7 @@ namespace Xesin.GameplayFramework.AI
             ParallelTasks[taskId].Status = BTTaskStatus.Aborting;
         }
 
-        internal void AddToParallelTasks(BTTaskNode taskNode)
+        internal void AddToParallelTasks(BTTask taskNode)
         {
             ParallelTasks.Add(taskNode);
         }
@@ -88,7 +92,7 @@ namespace Xesin.GameplayFramework.AI
             }
         }
 
-        internal void ExecuteOnEachParallelTask(Action<BTTaskNode, int> value)
+        internal void ExecuteOnEachParallelTask(Action<BTTask, int> value)
         {
             for (int i = 0; i < ParallelTasks.Count; i++)
             {
@@ -119,7 +123,7 @@ namespace Xesin.GameplayFramework.AI
 
             for (int i = 0; i < ParallelTasks.Count; i++)
             {
-                BTTaskNode task = ParallelTasks[i];
+                BTTask task = ParallelTasks[i];
                 if (task && task.Status == BTTaskStatus.Active)
                 {
                     searchData.AddUniqueUpdate(new BehaviorTreeSearchUpdate(task, instanceIndex, BTNodeUpdateMode.Remove));
@@ -145,7 +149,7 @@ namespace Xesin.GameplayFramework.AI
 
             for (int i = 0; i < ParallelTasks.Count; i++)
             {
-                BTTaskNode task = ParallelTasks[i];
+                BTTask task = ParallelTasks[i];
                 if (task.GetExecutionIndex() == testExecutionIndex)
                 {
                     return task.Status == BTTaskStatus.Active;
@@ -162,5 +166,135 @@ namespace Xesin.GameplayFramework.AI
 
             return false;
         }
+
+#if UNITY_EDITOR
+
+        public BTCompositeChild CreateNode(Type type)
+        {
+            var newNode = ScriptableObject.CreateInstance(type) as BTNode;
+            newNode.name = type.Name;
+            newNode.nodeId = GUID.Generate().ToString();
+
+            var result = new BTCompositeChild();
+
+            compositeNodes.Add(result);
+            if (newNode is BTComposite composite)
+            {
+                result.childComposite = composite;
+            }
+            else if (newNode is BTTask taskNode)
+            {
+                result.childTask = taskNode;
+            }
+
+            AssetDatabase.AddObjectToAsset(newNode, this);
+            AssetDatabase.SaveAssets();
+
+            return result;
+        }
+
+        public void DeleteNode(BTNode node)
+        {
+            BTCompositeChild child = GetChildByID(node.nodeId);
+            BTCompositeChild parent = node.GetParentNode() ? GetChildByID(node.GetParentNode().nodeId) : null;
+            if (child != null && parent != null)
+            {
+                RemoveChild(parent, child);
+            }
+            for (int i = compositeNodes.Count - 1; i >= 0; i--)
+            {
+                if (compositeNodes[i].childComposite == node || compositeNodes[i].childTask == node)
+                {
+                    compositeNodes.RemoveAt(i);
+                    continue;
+                }
+            }
+
+            if (rootNode == node)
+                rootNode = null;
+
+            AssetDatabase.RemoveObjectFromAsset(node);
+            AssetDatabase.SaveAssets();
+        }
+
+        public void AddChild(BTCompositeChild parent, BTCompositeChild child)
+        {
+            if (parent == null)
+            {
+                var composite = child.childComposite;
+                rootNode = composite;
+                composite.SetExecutionIndex(0);
+                composite.InitializeComposite((ushort)composite.children.Count);
+            }
+            else if (parent.childComposite && parent.childComposite is BTComposite composite)
+            {
+                composite.children.Add(child);
+
+                BTNode childNode = child.GetNode();
+                if(childNode)
+                {
+                    childNode.SetParent(parent.childComposite);
+                }
+            }
+        }
+
+        public void AddAuxNode(BTCompositeChild parent, BTAuxiliaryNode auxNode)
+        {
+            if (parent == null)
+            {
+
+            }
+            else
+            {
+                if (auxNode is BTDecorator decorator)
+                {
+                    decorator.SetChildIndex(parent.childComposite, parent.Decorators.Count);
+                    parent.Decorators.Add(decorator);
+                }
+                else if (parent.childComposite)
+                {
+                    parent.childComposite.services.Add(auxNode as BTService);
+                }
+                else if (parent.childTask)
+                {
+                    parent.childTask.services.Add(auxNode as BTService);
+                }
+            }
+        }
+
+        public void RemoveChild(BTCompositeChild parent, BTCompositeChild child)
+        {
+            if (parent.childComposite)
+            {
+                var children = parent.childComposite.children;
+                for (int i = children.Count - 1; i >= 0; i--)
+                {
+                    if ((child.childComposite && children[i].childComposite == child.childComposite) ||
+                        (child.childTask && children[i].childTask == child.childTask))
+                    {
+                        children.RemoveAt(i);
+                    }
+                }
+            }
+        }
+
+        public BTCompositeChild GetChildByID(string guid)
+        {
+            for (int i = 0; i < compositeNodes.Count; i++)
+            {
+                BTNode node = compositeNodes[i].childComposite ? compositeNodes[i].childComposite : compositeNodes[i].childTask;
+
+                if (node.nodeId == guid)
+                    return compositeNodes[i];
+            }
+
+            return null;
+        }
+
+        //public List<BTNode> GetChildren(BTNode parent)
+        //{
+
+        //}
+#endif
     }
 }

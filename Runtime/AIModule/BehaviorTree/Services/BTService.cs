@@ -46,5 +46,12 @@ namespace Xesin.GameplayFramework.AI
         {
             SetNextTickTime(UnityEngine.Random.Range(Math.Max(0f, interval - randomDeviation), (interval + randomDeviation)));
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "Service";
+        }
+#endif
     }
 }

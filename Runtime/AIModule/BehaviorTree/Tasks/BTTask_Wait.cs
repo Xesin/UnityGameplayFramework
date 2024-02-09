@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Xesin.GameplayFramework.AI
 {
     [CreateAssetMenu(fileName = "WaitTask", menuName = "WaitTask")]
-    public class BTTask_Wait : BTTaskNode
+    public class BTTask_Wait : BTTask
     {
         [SerializeField] private float waitTime;
         [SerializeField] private float randomDeviation;
@@ -26,5 +26,12 @@ namespace Xesin.GameplayFramework.AI
         {
             FinishLatentTask(ownerComp, BTNodeResult.Succeeded);
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "Wait";
+        }
+#endif
     }
 }

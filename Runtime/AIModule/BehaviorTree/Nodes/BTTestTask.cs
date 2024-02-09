@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
 {
     [CreateAssetMenu(fileName = "LogTask", menuName = "TEstTask")]
-    public class BTTestTask : BTTaskNode
+    public class BTTestTask : BTTask
     {
         public bool isSucceeded = true;
         private float startTime = 0;
@@ -19,5 +20,13 @@ namespace Xesin.GameplayFramework.AI
             Debug.Log("Tick task " + GetExecutionIndex());
             if (Time.time - startTime > 2) FinishLatentTask(ownerComp, BTNodeResult.Succeeded);
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "TestTask";
+        }
+#endif
+
     }
 }

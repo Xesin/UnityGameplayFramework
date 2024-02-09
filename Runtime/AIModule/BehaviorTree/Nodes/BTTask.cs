@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Xesin.GameplayFramework.AI
 {
 
-    public abstract class BTTaskNode : BTNode
+    public abstract class BTTask : BTNode
     {
         [SerializeField] private bool ignoreRestartSelf = false;
 

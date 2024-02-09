@@ -10,8 +10,9 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
     private Dictionary<LocalPlayer, UIViewport> playerViewports = new Dictionary<LocalPlayer, UIViewport>();
     private UIViewport screenViewport;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         SceneManager.sceneUnloaded += OnSceneUnLoaded;
     }
 

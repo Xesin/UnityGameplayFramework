@@ -270,7 +270,7 @@ namespace Xesin.GameplayFramework.AI
     public struct BehaviorTreeSearchUpdate
     {
         public BTAuxiliaryNode auxNode;
-        public BTTaskNode taskNode;
+        public BTTask taskNode;
 
         public ushort instanceIndex;
 
@@ -290,7 +290,7 @@ namespace Xesin.GameplayFramework.AI
             applySkipped = true;
         }
 
-        public BehaviorTreeSearchUpdate(BTTaskNode inTaskNode, ushort inInstanceIndex, BTNodeUpdateMode inMode)
+        public BehaviorTreeSearchUpdate(BTTask inTaskNode, ushort inInstanceIndex, BTNodeUpdateMode inMode)
         {
             taskNode = inTaskNode;
             auxNode = null;

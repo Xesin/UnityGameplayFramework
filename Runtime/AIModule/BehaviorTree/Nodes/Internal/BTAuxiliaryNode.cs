@@ -79,5 +79,20 @@ namespace Xesin.GameplayFramework.AI
         {
             return (ChildIndex == BTSpecialChild.OwnedByComposite) ? GetParentNode() : (GetParentNode() ? GetParentNode().GetChildNode(childIndex) : null);
         }
+
+#if UNITY_EDITOR
+        public void SetChildIndex(BTComposite parentNode, int newIndex)
+        {
+            this.parentNode = parentNode;
+            if (parentNode)
+            {
+                childIndex = BTSpecialChild.OwnedByComposite;
+            }
+            else
+            {
+                childIndex = (ushort)newIndex;
+            }
+        }
+#endif
     }
 }

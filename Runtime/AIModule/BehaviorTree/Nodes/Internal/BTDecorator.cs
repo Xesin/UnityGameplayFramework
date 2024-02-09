@@ -28,5 +28,12 @@ namespace Xesin.GameplayFramework.AI
         {
             return flowAbortMode;
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "Decorator";
+        }
+#endif
     }
 }

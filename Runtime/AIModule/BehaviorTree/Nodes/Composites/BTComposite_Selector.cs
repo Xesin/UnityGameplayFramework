@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
 {
     [CreateAssetMenu(fileName = "Selector", menuName = "TestingSelector")]
-    public class BTComposite_Selector : BTCompositeNode
+    public class BTComposite_Selector : BTComposite
     {
         public override int GetNextChildHandler(BehaviorTreeSearchData searchData, int prevChild, BTNodeResult lastResult)
         {
@@ -20,5 +21,12 @@ namespace Xesin.GameplayFramework.AI
 
             return nextChildIdx;
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "Selector";
+        }
+#endif
     }
 }

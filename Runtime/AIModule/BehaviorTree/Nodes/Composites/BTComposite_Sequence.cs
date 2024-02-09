@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
 {
     [CreateAssetMenu(fileName = "Sequence", menuName = "TestingSequence")]
-    public class BTComposite_Sequence : BTCompositeNode
+    public class BTComposite_Sequence : BTComposite
     {
         public override int GetNextChildHandler(BehaviorTreeSearchData searchData, int prevChild, BTNodeResult lastResult)
         {
@@ -20,5 +21,12 @@ namespace Xesin.GameplayFramework.AI
 
             return nextChildIdx;
         }
+
+#if UNITY_EDITOR
+        protected override string GetDefaultName()
+        {
+            return "Sequence";
+        }
+#endif
     }
 }

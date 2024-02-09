@@ -21,12 +21,12 @@ namespace Xesin.GameplayFramework.AI
     }
 
     [Serializable]
-    public struct BTCompositeChild
+    public class BTCompositeChild
     {
 
-        public BTCompositeNode childComposite;
+        public BTComposite childComposite;
 
-        public BTTaskNode childTask;
+        public BTTask childTask;
 
         [SerializeField] private List<BTDecorator> decorators;
 
@@ -34,6 +34,11 @@ namespace Xesin.GameplayFramework.AI
 
         public List<BTDecoratorLogic> DecoratorsOp => decoratorsOps ??= new List<BTDecoratorLogic>();
         public List<BTDecorator> Decorators => decorators ??= new List<BTDecorator>();
+
+        public BTNode GetNode()
+        {
+            return childComposite ? childComposite : childTask;
+        }
     }
 
     public struct BTDecoratorLogic
@@ -65,7 +70,7 @@ namespace Xesin.GameplayFramework.AI
         }
     };
 
-    public class BTCompositeNode : BTNode
+    public abstract class BTComposite : BTNode
     {
         public const byte NOT_INITIALIZED_CHILD = 255;
         public const byte RETURN_TO_PARENT_IDX = 254;
@@ -73,7 +78,6 @@ namespace Xesin.GameplayFramework.AI
         [SerializeField] private ushort lastExecutionIndex;
 
         public List<BTService> services = new List<BTService>();
-        public List<BTDecorator> decorators = new List<BTDecorator>();
 
         public List<BTCompositeChild> children = new List<BTCompositeChild>();
 
