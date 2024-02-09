@@ -12,7 +12,7 @@ namespace GameplayFramework.AI
 
         protected override void CreateInputNodes()
         {
-            var input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
+            input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
             input.portName = string.Empty;
             inputContainer.Add(input);
         }

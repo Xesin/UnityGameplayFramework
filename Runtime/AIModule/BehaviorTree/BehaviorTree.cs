@@ -264,13 +264,18 @@ namespace Xesin.GameplayFramework.AI
 
         public void RemoveChild(BTCompositeChild parent, BTCompositeChild child)
         {
-            if (parent.childComposite)
+            if(parent == null)
+            {
+                rootNode = null;
+            } else if (parent.childComposite)
             {
                 var children = parent.childComposite.children;
+                BTNode node = child.GetNode();
+                node.SetParent(null);
                 for (int i = children.Count - 1; i >= 0; i--)
                 {
-                    if ((child.childComposite && children[i].childComposite == child.childComposite) ||
-                        (child.childTask && children[i].childTask == child.childTask))
+                    if ((children[i].childComposite == node) ||
+                        (children[i].childTask == node))
                     {
                         children.RemoveAt(i);
                     }

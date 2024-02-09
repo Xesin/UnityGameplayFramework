@@ -7,6 +7,8 @@ namespace GameplayFramework.AI
     public class BTNodeView : Node
     {
         public BTNode node;
+        public Port input;
+        public Port output;
 
         public BTNodeView(BTNode node)
         {

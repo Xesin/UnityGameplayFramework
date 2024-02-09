@@ -41,6 +41,7 @@ namespace GameplayFramework.AI
 
             var root = CreateRootView();
             tree.compositeNodes.ForEach(CreateNodeView);
+            tree.compositeNodes.ForEach(CreateEdges);
 
             CenterGraphOnNode(root);
         }
@@ -54,6 +55,21 @@ namespace GameplayFramework.AI
                     if(elem is BTNodeView nodeView)
                     {
                         tree.DeleteNode(nodeView.node);
+                    }
+
+                    Edge edge = elem as Edge;
+                    if(edge != null)
+                    {
+                        BTNodeView inNode = edge.input.node as BTNodeView;
+                        if (edge.output.node is BTRootNodeView)
+                        {
+                            tree.RemoveChild(null, tree.GetChildByID(inNode.node.nodeId));
+                        }
+                        else
+                        {
+                            BTNodeView outNode = edge.output.node as BTNodeView;
+                            tree.RemoveChild(tree.GetChildByID(outNode.node.nodeId), tree.GetChildByID(inNode.node.nodeId));
+                        }
                     }
                 });
             }
@@ -103,6 +119,34 @@ namespace GameplayFramework.AI
                     break;
             }
             AddElement(nodeView);
+        }
+
+        private void CreateEdges(BTCompositeChild child)
+        {
+            if(tree.rootNode == child.GetNode())
+            {
+                BTRootNodeView parentView = GetNodeByGuid("BTRoot") as BTRootNodeView;
+                BTNodeView childView = GetNodeByGuid(child.GetNode().nodeId) as BTNodeView;
+
+                Edge edge = parentView.output.ConnectTo(childView.input);
+                AddElement(edge);
+            }
+
+
+            if(child.childComposite)
+            {
+                BTComposite composite = child.childComposite;
+                composite.children.ForEach(cc =>
+                {
+                    BTNode childNode = cc.GetNode();
+
+                    BTNodeView parentView = GetNodeByGuid(composite.nodeId) as BTNodeView;
+                    BTNodeView childView = GetNodeByGuid(childNode.nodeId) as BTNodeView;
+
+                    Edge edge = parentView.output.ConnectTo(childView.input);
+                    AddElement(edge);
+                });
+            }
         }
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)

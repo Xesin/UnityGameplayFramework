@@ -12,14 +12,14 @@ namespace GameplayFramework.AI
 
         protected override void CreateInputNodes()
         {
-            var input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
+            input = InstantiatePort(Orientation.Vertical, Direction.Input, Port.Capacity.Single, typeof(bool));
             input.portName = string.Empty;
             inputContainer.Add(input);
         }
 
         protected override void CreateOutputNodes()
         {
-            var output = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Multi, typeof(bool));
+            output = InstantiatePort(Orientation.Vertical, Direction.Output, Port.Capacity.Multi, typeof(bool));
             output.portName = string.Empty;
             outputContainer.Add(output);
         }
