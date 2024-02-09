@@ -16,11 +16,13 @@ namespace Xesin.GameplayFramework.AI
         [SerializeField] protected BehaviorTree treeAsset;
         [SerializeField] protected BTCompositeNode parentNode;
         [SerializeField] private ushort executionIndex;
+        public string nodeName = "Node";
 
 #if UNITY_EDITOR
         [SerializeField, HideInInspector] private Vector2 position;
         [SerializeField, HideInInspector] private Guid nodeId;
 #endif
+
 
         protected SceneObject Owner;
 

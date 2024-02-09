@@ -14,12 +14,10 @@ namespace Xesin.GameplayFramework.AI
             return isSucceeded ? BTNodeResult.InProgress : BTNodeResult.Failed;
         }
 
-        internal override bool Tick(BehaviorTreeComponent ownerComp, float deltaSeconds)
+        protected override void Tick(BehaviorTreeComponent ownerComp, float deltaSeconds)
         {
             Debug.Log("Tick task " + GetExecutionIndex());
             if (Time.time - startTime > 2) FinishLatentTask(ownerComp, BTNodeResult.Succeeded);
-
-            return true;
         }
     }
 }
