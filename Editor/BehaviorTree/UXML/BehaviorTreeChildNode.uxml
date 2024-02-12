@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="input" pickingMode="Ignore" />
+    <ui:VisualElement name="node-border" pickingMode="Ignore">
+        <ui:VisualElement name="contents" pickingMode="Ignore">
+            <ui:VisualElement name="decorators-container" />
+            <ui:VisualElement name="title" pickingMode="Ignore">
+                <ui:Label name="title-label" />
+            </ui:VisualElement>
+            <ui:VisualElement name="services-container" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="output" pickingMode="Ignore" />
+    <ui:VisualElement name="selection-border" pickingMode="Ignore" />
+    <ui:VisualElement name="executionIndex">
+        <ui:VisualElement class="rounded-image" />
+        <ui:Label name="executionIndexLabel" />
+    </ui:VisualElement>
+</ui:UXML>

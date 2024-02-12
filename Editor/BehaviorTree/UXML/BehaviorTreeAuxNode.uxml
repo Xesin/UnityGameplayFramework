@@ -1,0 +1,14 @@
+<UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="aux-contents" pickingMode="Ignore">
+        <ui:VisualElement name="title" pickingMode="Ignore">
+            <ui:Label name="title-label" text="" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="output" pickingMode="Ignore" class="hidden"/>
+    <ui:VisualElement name="input" pickingMode="Ignore" class="hidden"/>
+    <ui:VisualElement name="selection-border" pickingMode="Ignore" />
+    <ui:VisualElement name="executionIndex">
+        <ui:VisualElement class="rounded-image"/>
+        <ui:Label name="executionIndexLabel"/>
+    </ui:VisualElement>
+</UXML>

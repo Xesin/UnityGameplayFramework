@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
 {
-    [CreateAssetMenu(fileName = "Sequence", menuName = "TestingSequence")]
     public class BTComposite_Sequence : BTComposite
     {
         public override int GetNextChildHandler(BehaviorTreeSearchData searchData, int prevChild, BTNodeResult lastResult)

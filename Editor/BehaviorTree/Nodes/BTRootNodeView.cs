@@ -1,4 +1,6 @@
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine.UIElements;
 using Xesin.GameplayFramework.AI;
 
 namespace GameplayFramework.AI
@@ -8,7 +10,7 @@ namespace GameplayFramework.AI
         BehaviorTree tree;
         public Port output;
 
-        public BTRootNodeView(BehaviorTree tree)
+        public BTRootNodeView(BehaviorTree tree) : base("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/BehaviorTreeChildNode.uxml")
         {
             this.tree = tree;
             capabilities -= Capabilities.Movable;
@@ -16,8 +18,13 @@ namespace GameplayFramework.AI
             viewDataKey = "BTRoot";
             title = "Root";
             CreateOutputPort();
-            inputContainer.AddToClassList("hidden");
+            inputContainer.style.display = DisplayStyle.None;
 
+            this.Q("executionIndex").style.display = DisplayStyle.None;
+
+            UseDefaultStyling();
+            var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/BehaviorTreeChildNode.uss");
+            styleSheets.Add(styleSheet);
             style.top = -100;
         }
 
@@ -27,6 +34,8 @@ namespace GameplayFramework.AI
 
             output.portName = string.Empty;
             outputContainer.Add(output);
+
+            inputContainer.style.display = DisplayStyle.None;
         }
     }
 }

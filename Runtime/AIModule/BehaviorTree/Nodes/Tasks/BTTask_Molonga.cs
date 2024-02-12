@@ -3,8 +3,7 @@ using UnityEngine;
 
 namespace Xesin.GameplayFramework.AI
 {
-    [CreateAssetMenu(fileName = "WaitTask", menuName = "WaitTask")]
-    public class BTTask_Wait : BTTask
+    public class BTTask_Molonga : BTTask
     {
         [SerializeField] private float waitTime;
         [SerializeField] private float randomDeviation;
@@ -30,7 +29,7 @@ namespace Xesin.GameplayFramework.AI
 #if UNITY_EDITOR
         protected override string GetDefaultName()
         {
-            return "Wait";
+            return "Task Molonga";
         }
 #endif
     }

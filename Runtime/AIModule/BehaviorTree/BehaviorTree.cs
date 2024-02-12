@@ -169,28 +169,36 @@ namespace Xesin.GameplayFramework.AI
 
 #if UNITY_EDITOR
 
-        public BTCompositeChild CreateNode(Type type)
+        public BTNode CreateNode(Type type, out BTCompositeChild compositeChild)
         {
             var newNode = ScriptableObject.CreateInstance(type) as BTNode;
             newNode.name = type.Name;
             newNode.nodeId = GUID.Generate().ToString();
 
-            var result = new BTCompositeChild();
+            if (newNode is BTAuxiliaryNode auxNode)
+            {
+                compositeChild = null;
 
-            compositeNodes.Add(result);
-            if (newNode is BTComposite composite)
-            {
-                result.childComposite = composite;
             }
-            else if (newNode is BTTask taskNode)
+            else
             {
-                result.childTask = taskNode;
+                compositeChild = new BTCompositeChild();
+
+                compositeNodes.Add(compositeChild);
+                if (newNode is BTComposite composite)
+                {
+                    compositeChild.childComposite = composite;
+                }
+                else if (newNode is BTTask taskNode)
+                {
+                    compositeChild.childTask = taskNode;
+                }
             }
 
             AssetDatabase.AddObjectToAsset(newNode, this);
             AssetDatabase.SaveAssets();
 
-            return result;
+            return newNode;
         }
 
         public void DeleteNode(BTNode node)
@@ -201,6 +209,41 @@ namespace Xesin.GameplayFramework.AI
             {
                 RemoveChild(parent, child);
             }
+            else if (node is BTAuxiliaryNode auxNode)
+            {
+                bool doneSomething = false;
+                for (int i = 0; i < compositeNodes.Count; i++)
+                {
+                    if (auxNode is BTDecorator decorator)
+                    {
+                        if (compositeNodes[i].Decorators.Contains(decorator))
+                        {
+                            doneSomething = true;
+                            compositeNodes[i].Decorators.Remove(decorator);
+                        }
+                    }
+                    else if(auxNode is BTService service)
+                    {
+                        if (compositeNodes[i].GetNode() is BTComposite comp && comp.services.Contains(service))
+                        {
+                            doneSomething = true;
+                            comp.services.Remove(service);
+                        }
+
+                        if (compositeNodes[i].GetNode() is BTTask task && task.services.Contains(service))
+                        {
+                            doneSomething = true;
+                            task.services.Remove(service);
+                        }
+                    }
+
+                    if(doneSomething && compositeNodes[i].GetNode() && compositeNodes[i].GetNode().GetParentNode())
+                    {
+                        compositeNodes[i].GetNode().GetParentNode().SortChildren();
+                    }
+                }
+            }
+
             for (int i = compositeNodes.Count - 1; i >= 0; i--)
             {
                 if (compositeNodes[i].childComposite == node || compositeNodes[i].childTask == node)
@@ -231,9 +274,10 @@ namespace Xesin.GameplayFramework.AI
                 composite.children.Add(child);
 
                 BTNode childNode = child.GetNode();
-                if(childNode)
+                if (childNode)
                 {
                     childNode.SetParent(parent.childComposite);
+                    parent.childComposite.SortChildren();
                 }
             }
         }
@@ -249,25 +293,46 @@ namespace Xesin.GameplayFramework.AI
                 if (auxNode is BTDecorator decorator)
                 {
                     decorator.SetChildIndex(parent.childComposite, parent.Decorators.Count);
+                    decorator.SetExecutionIndex(parent.GetNode().GetExecutionIndex());
+                    parent.GetNode().SetExecutionIndex(parent.GetNode().GetNexExecutionIndex(decorator.GetExecutionIndex()));
                     parent.Decorators.Add(decorator);
                 }
                 else if (parent.childComposite)
                 {
-                    parent.childComposite.services.Add(auxNode as BTService);
+                    BTService service = auxNode as BTService;
+                    parent.childComposite.services.Add(service);
+                    service.SetExecutionIndex(parent.GetNode().GetExecutionIndex());
+                    parent.GetNode().SetExecutionIndex(service.GetExecutionIndex() + 1);
+
+                    for (int i = 0; i < parent.Decorators.Count; i++)
+                    {
+                        parent.Decorators[i].SetExecutionIndex(parent.Decorators[i].GetExecutionIndex() + 1);
+                    }
                 }
                 else if (parent.childTask)
                 {
                     parent.childTask.services.Add(auxNode as BTService);
+                }
+
+
+
+                if (parent.childComposite && parent.childComposite.GetParentNode())
+                {
+                    parent.childComposite.GetParentNode().SortChildren();
+                }else if (parent.childTask && parent.childTask.GetParentNode())
+                {
+                    parent.childTask.GetParentNode().SortChildren();
                 }
             }
         }
 
         public void RemoveChild(BTCompositeChild parent, BTCompositeChild child)
         {
-            if(parent == null)
+            if (parent == null)
             {
                 rootNode = null;
-            } else if (parent.childComposite)
+            }
+            else if (parent.childComposite)
             {
                 var children = parent.childComposite.children;
                 BTNode node = child.GetNode();
@@ -280,6 +345,7 @@ namespace Xesin.GameplayFramework.AI
                         children.RemoveAt(i);
                     }
                 }
+                parent.childComposite.SortChildren();
             }
         }
 

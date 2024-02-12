@@ -39,6 +39,13 @@ namespace Xesin.GameplayFramework.AI
         {
             return childComposite ? childComposite : childTask;
         }
+
+#if UNITY_EDITOR
+        public Vector2 GetPosition()
+        {
+            return GetNode() ? GetNode().position : Vector2.zero;
+        }
+#endif
     }
 
     public struct BTDecoratorLogic
@@ -458,5 +465,45 @@ namespace Xesin.GameplayFramework.AI
         {
 
         }
+
+#if UNITY_EDITOR
+        public void SortChildren()
+        {
+            children.Sort((x, y) => x.GetPosition().x.CompareTo(y.GetPosition().x));
+
+            int nextExecutionIndex = GetNexExecutionIndex(GetExecutionIndex());
+
+            for (int i = 0; i < children.Count; i++)
+            {
+                var node = children[i].GetNode();
+
+                if(node is BTComposite composite)
+                {
+                    for (int serviceIndex = 0; serviceIndex < composite.services.Count; serviceIndex++)
+                    {
+                        composite.services[serviceIndex].SetExecutionIndex(nextExecutionIndex);
+                        nextExecutionIndex = GetNexExecutionIndex(composite.services[serviceIndex].GetExecutionIndex());
+                    }
+                }
+                else if (node is BTTask task)
+                {
+                    for (int serviceIndex = 0; serviceIndex < task.services.Count; serviceIndex++)
+                    {
+                        task.services[serviceIndex].SetExecutionIndex(nextExecutionIndex);
+                        nextExecutionIndex = GetNexExecutionIndex(task.services[serviceIndex].GetExecutionIndex());
+                    }
+                }
+
+                for (int decoratorIndex = 0; decoratorIndex < children[i].Decorators.Count; decoratorIndex++)
+                {
+                    children[i].Decorators[decoratorIndex].SetExecutionIndex(nextExecutionIndex);
+                    nextExecutionIndex = GetNexExecutionIndex(children[i].Decorators[decoratorIndex].GetExecutionIndex());
+                }
+
+                node.SetExecutionIndex(nextExecutionIndex);
+                nextExecutionIndex = GetNexExecutionIndex(node.GetExecutionIndex());
+            }
+        }
+#endif
     }
 }

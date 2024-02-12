@@ -1,0 +1,81 @@
+.node #contents {
+    background-color: rgba(45,45,45,255);
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.node {
+    min-width: 160;
+}
+
+#contents #title {
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.node, #title-label {
+    align-self: center;
+    font-size: 15px;
+    -unity-font-style: bold;
+}
+
+#node-border
+{
+    border-width: 6;
+}
+
+.connectorText{
+    display: None
+}
+
+#output, .port{
+    align-self: center;
+    height: 10px;
+}
+
+#input, .port{
+    align-self: center;
+    height: 10px;
+}
+
+#decorators-container{
+    margin-left: 2px;
+}
+
+#decorators-container .node{
+    margin-top: -2px;
+}
+
+#services-container{
+    margin-right: 2px;
+}
+
+#services-container .node{
+    margin-bottom: -2px;
+}
+
+#executionIndex{
+    position: absolute;
+    top: -1px;
+    right: 3px;
+}
+
+#executionIndex .unity-label{
+    position: absolute;
+    align-self: center;
+    top: 3px;
+    font-size: 9px;
+}
+
+#executionIndex .rounded-image{
+    width: 17px;
+    height: 17px;
+    background-color: rgba(65,65,65,255); 
+    border-color: rgba(45,45,45,255); 
+    border-width: 2px;
+    border-radius: 7px;
+}
+
+#title-label, .unity-label{
+    color: rgba(255,255,255,255);
+}

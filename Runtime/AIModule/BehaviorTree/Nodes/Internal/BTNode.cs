@@ -15,7 +15,7 @@ namespace Xesin.GameplayFramework.AI
     {
         [SerializeField] protected BehaviorTree treeAsset;
         [SerializeField] protected BTComposite parentNode;
-        [SerializeField] private ushort executionIndex;
+        [SerializeField] protected ushort executionIndex;
         public string nodeName = string.Empty;
 
 #if UNITY_EDITOR
@@ -31,6 +31,7 @@ namespace Xesin.GameplayFramework.AI
         public BTNode()
         {
 #if UNITY_EDITOR
+            executionIndex = BTComposite.NOT_INITIALIZED_CHILD;
             OnValidate();
 #endif
         }
@@ -68,9 +69,14 @@ namespace Xesin.GameplayFramework.AI
             return treeAsset ? treeAsset.blackboardAsset : null;
         }
 
-        internal ushort GetExecutionIndex()
+        public ushort GetExecutionIndex()
         {
             return executionIndex;
+        }
+
+        public ushort GetNexExecutionIndex(ushort execIndex)
+        {
+            return GetParentNode() || treeAsset.rootNode == this ? (ushort) (execIndex + 1): BTComposite.NOT_INITIALIZED_CHILD;
         }
 
         protected void SetOwner(SceneObject owner)
@@ -98,6 +104,22 @@ namespace Xesin.GameplayFramework.AI
         public void SetParent(BTComposite newParent)
         {
             parentNode = newParent;
+
+            if(newParent == null)
+            { 
+                executionIndex = BTComposite.NOT_INITIALIZED_CHILD;
+
+                for (int i = 0; i < treeAsset.compositeNodes.Count; i++)
+                {
+                    if (treeAsset.compositeNodes[i].GetNode() == this)
+                    {
+                        for (int decoratorIdx = 0; decoratorIdx < treeAsset.compositeNodes[i].Decorators.Count; decoratorIdx++)
+                        {
+                            treeAsset.compositeNodes[i].Decorators[decoratorIdx].SetExecutionIndex(executionIndex);
+                        }
+                    }
+                }
+            }
         }
 #endif
     }
