@@ -9,11 +9,19 @@ namespace GameplayFramework.AI
     {
         public BTAuxNodeView(BTNode node) : base(node, "Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/BehaviorTreeAuxNode.uxml")
         {
+
             var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/BehaviorTreeChildNode.uss");
             styleSheets.Add(styleSheet);
             style.position = Position.Relative;
 
-            titleContainer.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/DecoratorGradient.png"));
+            if (node is BTDecorator)
+            {
+                titleContainer.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/DecoratorGradient.png"));
+            }
+            else
+            {
+                titleContainer.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/UXML/ServiceGradient.png"));
+            }
         }
 
         protected override void CreateInputNodes()

@@ -175,6 +175,7 @@ namespace GameplayFramework.AI
             {
                 case BTTask:
                     nodeView = new BTTaskNodeView(node);
+                    
                     break;
                 case BTDecorator:
                     {
@@ -218,12 +219,12 @@ namespace GameplayFramework.AI
 
             if (node is BTTask task)
             {
-                task.services.ForEach(n => CreateNodeView(n, false));
+                task.services.ForEach(n => CreateNodeView(n, false, nodeView));
             }
 
             if (node is BTComposite compNode)
             {
-                compNode.services.ForEach(n => CreateNodeView(n, false));
+                compNode.services.ForEach(n => CreateNodeView(n, false, nodeView));
             }
 
             return nodeView;

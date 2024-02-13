@@ -96,7 +96,7 @@ namespace Xesin.GameplayFramework.Utils
 
         void PlayModeChanged(PlayModeStateChange state)
         {
-            if (state == PlayModeStateChange.ExitingPlayMode)
+            if (state == PlayModeStateChange.EnteredEditMode)
             {
                 if (Exists)
                 {
