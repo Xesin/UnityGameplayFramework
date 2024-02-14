@@ -142,19 +142,22 @@ namespace Xesin.GameplayFramework
         public void SetInputUIOnly()
         {
             inputComponent.DisableInput();
-            player.UIInputModule.enabled = true;
+            if (player.UIInputModule)
+                player.UIInputModule.enabled = true;
         }
 
         public void SetInputGameplayOnly()
         {
             inputComponent.ActivateInput();
-            player.UIInputModule.enabled = false;
+            if(player.UIInputModule)
+                player.UIInputModule.enabled = false;
         }
 
         public void SetInputGameplayAndUI()
         {
             inputComponent.ActivateInput();
-            player.UIInputModule.enabled = true;
+            if (player.UIInputModule)
+                player.UIInputModule.enabled = true;
         }
     }
 }
