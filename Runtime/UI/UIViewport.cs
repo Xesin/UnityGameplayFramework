@@ -25,7 +25,7 @@ public class UIViewport : MonoBehaviour
         }
     }
 
-    public UIWidget AddWidget(UIWidget widget)
+    public T AddWidget<T>(T widget) where T : UIWidget
     {
         var newWidget = Instantiate(widget, canvas.GetComponent<RectTransform>());
         newWidget.Owner = Owner;
@@ -33,7 +33,7 @@ public class UIViewport : MonoBehaviour
         return newWidget;
     }
 
-    public UIWidget AddWidgetNoInstancing(UIWidget widget)
+    public T AddWidgetNoInstancing<T>(T widget) where T : UIWidget
     {
         widget.transform.SetParent(canvas.GetComponent<RectTransform>());
         widget.Owner = Owner;

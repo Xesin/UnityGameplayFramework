@@ -50,7 +50,7 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
         return screenViewport;
     }
 
-    public UIWidget AddToScreen(UIWidget gameObject, bool isPrefab = true)
+    public T AddToScreen<T>(T gameObject, bool isPrefab = true) where T : UIWidget
     {
         if (screenViewport != null)
         {
@@ -63,7 +63,7 @@ public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
         return null;
     }
 
-    public UIWidget AddToScreen(PlayerController playerController, UIWidget gameObject, bool isPrefab = true)
+    public T AddToScreen<T>(PlayerController playerController, T gameObject, bool isPrefab = true) where T : UIWidget
     {
         Assert.IsNotNull(playerController, "Tried to add ui to the screen with null player controller");
 
