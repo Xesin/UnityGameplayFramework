@@ -113,6 +113,16 @@ namespace Xesin.GameplayCues
             if (obj is not GameplayTag tag) return false;
             return tag.value.GetHashCode() == value.GetHashCode();
         }
+
+        public static implicit operator GameplayTag(string stringValue)
+        {
+            return GameplayTagsContainer.Instance.ResolveTag(stringValue);
+        }
+
+        public static implicit operator string(GameplayTag tagValue)
+        {
+            return tagValue.value;
+        }
     }
 
     [System.Serializable]
