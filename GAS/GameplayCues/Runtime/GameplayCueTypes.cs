@@ -116,7 +116,7 @@ namespace Xesin.GameplayCues
 
         public static implicit operator GameplayTag(string stringValue)
         {
-            return GameplayTagsContainer.Instance.ResolveTag(stringValue);
+            return GameplayTagsContainer.RequestGameplayTag(stringValue);
         }
 
         public static implicit operator string(GameplayTag tagValue)
