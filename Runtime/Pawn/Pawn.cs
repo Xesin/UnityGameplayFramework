@@ -67,8 +67,22 @@ namespace Xesin.GameplayFramework
                 SpawnDefaultController();
                 return;
             }
+        }
 
+        protected virtual void OnEnable()
+        {
+            if(Controller is PlayerController player)
+            {
+                SetupPlayerInput(player.GetInputComponent());
+            }
+        }
 
+        protected virtual void OnDisable()
+        {
+            if (Controller is PlayerController player)
+            {
+                ClearPlayerInput(player.GetInputComponent());
+            }
         }
 
         protected virtual void OnDestroy()
