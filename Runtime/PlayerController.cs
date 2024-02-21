@@ -25,8 +25,6 @@ namespace Xesin.GameplayFramework
         protected virtual void LateUpdate()
         {
             UpdateRotation(Time.deltaTime);
-
-            rotationInput = Vector3.zero;
         }
 
         private void OnDestroy()
@@ -43,10 +41,12 @@ namespace Xesin.GameplayFramework
             playerControllers.Remove(this);
         }
 
-        private void UpdateRotation(float deltaTime)
+        protected virtual void UpdateRotation(float deltaTime)
         {
             // Calculate Delta to be applied on ViewRotation
             Vector3 DeltaRot = rotationInput;
+            rotationInput = Vector3.zero;
+
             DeltaRot.x = -DeltaRot.x;
             Vector3 ViewRotation = GetControlRotation();
 
