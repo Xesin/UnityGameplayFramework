@@ -41,11 +41,17 @@ namespace Xesin.GameplayFramework
             playerControllers.Remove(this);
         }
 
+        protected Vector3 ConsumeInput()
+        {
+            Vector3 input = rotationInput;
+            rotationInput = Vector3.zero;
+            return input;
+        }
+
         protected virtual void UpdateRotation(float deltaTime)
         {
             // Calculate Delta to be applied on ViewRotation
-            Vector3 DeltaRot = rotationInput;
-            rotationInput = Vector3.zero;
+            Vector3 DeltaRot = ConsumeInput();
 
             DeltaRot.x = -DeltaRot.x;
             Vector3 ViewRotation = GetControlRotation();
