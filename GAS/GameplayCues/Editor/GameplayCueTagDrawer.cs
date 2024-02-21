@@ -164,7 +164,7 @@ namespace Xesin.GameplayCues
 
             private void RecursiveAdd(List<TreeViewItem> treeViews, TreeViewItem viewItem)
             {
-                GameplayTag searchAsTag = GameplayTagsContainer.RequestGameplayTag(searchString);
+                GameplayTag searchAsTag = GameplayTagsContainer.Instance.ResolveTag(searchString);
                 GameplayTagTreeViewItem item = viewItem as GameplayTagTreeViewItem;
 
                 if (viewItem.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0 || item.node.ToGameplayTag().MatchesTag(searchAsTag, false))
@@ -195,7 +195,7 @@ namespace Xesin.GameplayCues
             private bool RecursiveSearch(List<TreeViewItem> treeViews, TreeViewItem viewItem)
             {
                 GameplayTagTreeViewItem item = viewItem as GameplayTagTreeViewItem;
-                GameplayTag searchAsTag = GameplayTagsContainer.RequestGameplayTag(searchString);
+                GameplayTag searchAsTag = GameplayTagsContainer.Instance.ResolveTag(searchString);
 
                 if (viewItem.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
