@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using Xesin.GameplayCues;
+using Xesin.GameplayFramework.Domain;
 
 namespace Xesin.GameplayFramework.Messages
 {
 
     public static class MessageService
     {
+        [ClearOnReload(newInstance: true)]
         public static readonly Dictionary<GameplayTag, MessageStream> Streams = new Dictionary<GameplayTag, MessageStream>();
 
         public static void SendMessage(GameplayTag tag, string message = "")
