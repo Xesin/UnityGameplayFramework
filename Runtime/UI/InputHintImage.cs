@@ -24,7 +24,7 @@ namespace Xesin.GameplayFramework
 
         private void Awake()
         {
-            if(!hintContainer.TryGetComponent(out gridLayout))
+            if (!hintContainer.TryGetComponent(out gridLayout))
             {
                 gridLayout = hintContainer.gameObject.AddComponent<GridLayoutGroup>();
             }
@@ -63,11 +63,12 @@ namespace Xesin.GameplayFramework
             instancedHints.Clear();
 
             PlayerInput input = GetPlayerInput();
-            var action = inputAction.action;
+            var action = input.actions.First(action => inputAction.action.name == action.name && inputAction.action.actionMap.name == action.actionMap.name);
 
+            string controls = action.ToString();
             int bindingIndex = action.GetBindingIndex(input.currentControlScheme);
 
-            if(bindingIndex == -1)
+            if (bindingIndex == -1)
             {
                 Image newImage = CreateNewImage();
                 newImage.sprite = InputImages.Instance.GetFallbackImage();
@@ -76,7 +77,7 @@ namespace Xesin.GameplayFramework
 
             if (!action.bindings[bindingIndex].isComposite && !action.bindings[bindingIndex].isPartOfComposite)
             {
-                if(isSecondaryInput && action.bindings.Count < bindingIndex + 1 && action.bindings[bindingIndex + 1].action == action.bindings[bindingIndex].action)
+                if (isSecondaryInput && action.bindings.Count < bindingIndex + 1 && action.bindings[bindingIndex + 1].action == action.bindings[bindingIndex].action)
                 {
                     bindingIndex++;
                 }
@@ -87,7 +88,7 @@ namespace Xesin.GameplayFramework
             }
             else
             {
-                if(action.bindings[bindingIndex].isComposite)
+                if (action.bindings[bindingIndex].isComposite)
                     bindingIndex += 1;
 
                 int numCompositeBindings = 0;
@@ -101,7 +102,7 @@ namespace Xesin.GameplayFramework
                         bindingIndex++;
                         continue;
                     }
-                    else if(isSecondaryInput && !addedActions.Contains(action.bindings[bindingIndex].name) && action.bindings.Count(b => b.name == action.bindings[bindingIndex].name) > 1)
+                    else if (isSecondaryInput && !addedActions.Contains(action.bindings[bindingIndex].name) && action.bindings.Count(b => b.name == action.bindings[bindingIndex].name) > 1)
                     {
                         addedActions.Add(action.bindings[bindingIndex].name);
                         bindingIndex++;
@@ -121,7 +122,7 @@ namespace Xesin.GameplayFramework
                     bindingIndex++;
                 }
 
-                if(numCompositeBindings == 4)
+                if (numCompositeBindings == 4)
                 {
                     GameObject blankSpace = CreateBlankSpace();
                     blankSpace.transform.SetAsFirstSibling();
