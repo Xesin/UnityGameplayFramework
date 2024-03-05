@@ -22,8 +22,9 @@ namespace Xesin.GameplayFramework
 
         private Dictionary<string, InputImageCollection> loadedCollections;
 
-        private void OnEnable()
+        protected override void OnEnable()
         {
+            base.OnEnable();
             loadedCollections ??= new Dictionary<string, InputImageCollection>();
             loadedCollections.Clear();
         }
