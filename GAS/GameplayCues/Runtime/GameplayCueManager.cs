@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.Util;
 using UnityEngine.SceneManagement;
+using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayCues
 {
-    public class GameplayCueManager : ComponentSingleton<GameplayCueManager>
+    public class GameplayCueManager : MonoSingleton<GameplayCueManager>
     {
         private Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>> recycledQueue = new Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>>();
         Dictionary<string, GameObject> loadedCues = new Dictionary<string, GameObject>();

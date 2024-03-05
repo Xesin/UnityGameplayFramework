@@ -2,6 +2,7 @@
 using UnityEditor;
 #endif
 using UnityEngine;
+using Xesin.GameplayFramework.Domain;
 
 namespace Xesin.GameplayFramework.Utils
 {
@@ -12,6 +13,7 @@ namespace Xesin.GameplayFramework.Utils
     /// <typeparam name="T">The singleton type.</typeparam>
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
+        [ClearOnReload]
         static T s_Instance;
 
         /// <summary>
