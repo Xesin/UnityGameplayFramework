@@ -52,23 +52,19 @@ namespace Xesin.GameplayFramework.Input
 
         private void OnDestroy()
         {
-#if !UNITY_SWITCH
             if (Application.isPlaying)
             {
                 InputUser.onUnpairedDeviceUsed -= UnpairedDeviceUsed;
                 --InputUser.listenForUnpairedDeviceActivity;
             }
-#endif
         }
 
         internal void Initialize()
         {
             if (!initialized)
             {
-#if !UNITY_SWITCH
                 InputUser.onUnpairedDeviceUsed += UnpairedDeviceUsed;
                 ++InputUser.listenForUnpairedDeviceActivity;
-#endif
                 LookForUnpairedDevices();
 
                 Debug.Log("Input Manager initialized");
@@ -81,16 +77,11 @@ namespace Xesin.GameplayFramework.Input
         {
             if (GameplayGlobalSettings.Instance.autocreatePlayerOne)
             {
-                var playerOneDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
-                var otherDevices = InputUser.GetUnpairedInputDevices().Where(device => device.name != "Mouse" && device.name != "Keyboard");
-
-                if (otherDevices.Count() > 0)
-                {
-                    playerOneDevices = playerOneDevices.Append(otherDevices.ElementAt(0)).ToArray();
-                }
+                Debug.Log("CREATING PLAYER ONE");
+                var playerOneDevices = GetPlayerOneDevicesCandidates();
 
                 var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                    new ReadOnlyArray<InputDevice>(playerOneDevices, 0, playerOneDevices.Length), 
+                    new ReadOnlyArray<InputDevice>(playerOneDevices, 0, playerOneDevices.Length),
                     GameplayGlobalSettings.Instance.localPlayerPrefab.GetComponent<PlayerInput>().actions.controlSchemes,
                     allowUnsuccesfulMatch: true) ?? default;
 
@@ -104,8 +95,29 @@ namespace Xesin.GameplayFramework.Input
                 }
 
                 var playerOneInput = CreatePlayerWithDevices(initialDevices.ToArray(), playerOneDevices);
-                
+
             }
+        }
+
+        public InputDevice[] GetPlayerOneDevicesCandidates()
+        {
+            var unpairedDevices = InputUser.GetUnpairedInputDevices();
+            var playerOneDevices = unpairedDevices.Where(device => device.name == "Mouse" || device.name == "Keyboard").ToArray();
+            var otherDevices = unpairedDevices.Where(device => device.name != "Mouse" && device.name != "Keyboard");
+
+            if (otherDevices.Count() > 0)
+            {
+                var device = otherDevices.ElementAt(0);
+                var tmpDevices = playerOneDevices.Append(device);
+
+                if (device.name.Contains("npad", System.StringComparison.OrdinalIgnoreCase) && otherDevices.Count() > 1)
+                {
+                    tmpDevices = playerOneDevices.Append(otherDevices.ElementAt(1));
+                }
+                playerOneDevices = tmpDevices.ToArray();
+            }
+
+            return playerOneDevices;
         }
 
         private void UnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
@@ -139,7 +151,7 @@ namespace Xesin.GameplayFramework.Input
             }
         }
 
-        private static void PerfomPairingWithDevice(InputDevice device, LocalPlayer playerController)
+        public static void PerfomPairingWithDevice(InputDevice device, LocalPlayer playerController)
         {
             if (InputControlScheme.FindControlSchemeForDevices(playerController.Devices, playerController.PlayerInput.actions.controlSchemes,
                                     out var controlScheme, out var matchResult, mustIncludeDevice: device))
@@ -147,6 +159,14 @@ namespace Xesin.GameplayFramework.Input
                 playerController.PlayerInput.SwitchCurrentControlScheme(matchResult.devices.ToArray());
             }
             matchResult.Dispose();
+        }
+
+        public static void PerfomPairingWithDevice(InputDevice[] devices, LocalPlayer playerController)
+        {
+            for (int i = 0; i < devices.Length; i++)
+            {
+                PerfomPairingWithDevice(devices[i], playerController);
+            }
         }
 
         public LocalPlayer CreatePlayer(params InputDevice[] devices)
