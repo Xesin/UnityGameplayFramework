@@ -55,13 +55,6 @@ namespace Xesin.GameplayFramework
 
         public void UpdateImage()
         {
-            for (int i = 0; i < instancedHints.Count; i++)
-            {
-                DestroyImmediate(instancedHints[i]);
-            }
-
-            instancedHints.Clear();
-
             PlayerInput input = GetPlayerInput();
             var action = input.actions.First(action => inputAction.action.name == action.name && inputAction.action.actionMap.name == action.actionMap.name);
 
@@ -70,10 +63,15 @@ namespace Xesin.GameplayFramework
 
             if (bindingIndex == -1)
             {
-                Image newImage = CreateNewImage();
-                newImage.sprite = InputImages.Instance.GetFallbackImage();
+                return;
             }
 
+            for (int i = 0; i < instancedHints.Count; i++)
+            {
+                DestroyImmediate(instancedHints[i]);
+            }
+
+            instancedHints.Clear();
 
             if (!action.bindings[bindingIndex].isComposite && !action.bindings[bindingIndex].isPartOfComposite)
             {
