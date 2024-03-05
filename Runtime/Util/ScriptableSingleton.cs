@@ -96,5 +96,13 @@ namespace Xesin.GameplayFramework.Utils
         }
 #endif
 
+        void OnEnable()
+        {
+            if (s_Instance == null)
+            {
+                s_Instance = (T)this;
+            }
+        }
+
     }
 }
