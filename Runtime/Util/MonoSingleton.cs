@@ -14,7 +14,7 @@ namespace Xesin.GameplayFramework.Utils
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
         [ClearOnReload]
-        static T s_Instance;
+        protected static T s_Instance;
 
         /// <summary>
         /// Indicates whether or not there is an existing instance of the singleton.

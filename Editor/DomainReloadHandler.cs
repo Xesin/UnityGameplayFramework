@@ -18,6 +18,15 @@ namespace Xesin.GameplayFramework.Editor
 
             int clearedValues = 0;
 
+            foreach (MemberInfo member in GetMethodMembers<ExecuteOnReloadAttribute>(true))
+            {
+                var method = member as MethodInfo;
+
+                if (method == null || method.IsGenericMethod || !method.IsStatic)
+                    continue;
+                method.Invoke(null, new object[] { });
+            }
+
             foreach (MemberInfo member in GetMembers<ClearOnReloadAttribute>(true))
             {
                 //Fields
@@ -124,10 +133,11 @@ namespace Xesin.GameplayFramework.Editor
 
                     foreach (Type type in types)
                     {
-                        if (!type.IsClass) continue;
+                        if (!type.IsClass || type.IsAbstract) continue;
 
                         //Fields
-                        members.AddRange(type.GetFields(flags).Cast<MemberInfo>().Where(member => member.IsDefined(typeof(TAttribute), inherit)));
+                        var fields = type.GetFields(flags).Cast<MemberInfo>().ToList();
+                        members.AddRange(fields.Where(member => member.IsDefined(typeof(TAttribute), inherit)));
 
                         //Properties
                         var properties = type.GetProperties(flags);

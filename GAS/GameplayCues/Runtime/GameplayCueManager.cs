@@ -1,9 +1,11 @@
+using MacFsWatcher;
 using System;
 using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
+using Xesin.GameplayFramework.Domain;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayCues
@@ -25,6 +27,18 @@ namespace Xesin.GameplayCues
         private void OnDestroy()
         {
             SceneManager.sceneUnloaded -= OnSceneUnload;
+        }
+
+        [ExecuteOnReload]
+        private static void OnReload()
+        {
+            if(s_Instance)
+            {
+                foreach (var item in s_Instance.loadedCues)
+                {
+                    Addressables.Release(item.Value);
+                }
+            }
         }
 
         private void OnSceneUnload(Scene scene)
