@@ -87,7 +87,7 @@ namespace Xesin.GameplayCues
             if(!Instance.IsValid(result))
             {
                 if(Application.isPlaying)
-                    Debug.LogError("Requested invalid tag: " + tag + " is missing");
+                    Debug.LogWarning("Requested invalid tag: " + tag + " is missing");
             }
 
             return result;
