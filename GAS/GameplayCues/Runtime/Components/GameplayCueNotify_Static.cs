@@ -9,7 +9,7 @@ namespace Xesin.GameplayCues
         [ExecuteOnReload]
         private static void OnReload()
         {
-            var allCues = FindObjectsOfType<GameplayCueNotify_Static>(true);
+            var allCues = Resources.FindObjectsOfTypeAll<GameplayCueNotify_Static>();
             for (int i = 0; i < allCues.Length; i++)
             {
                 allCues[i].ResetCues();
