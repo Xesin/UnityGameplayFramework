@@ -39,15 +39,6 @@ namespace Xesin.GameplayFramework
         {
             base.Awake();
             movementComponent = GetComponent<PawnMovement>();
-            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
-
-            for (int i = 0; i < gameplayComponents.Length; i++)
-            {
-                if (gameplayComponents[i] != this)
-                {
-                    gameplayComponents[i].SetOwner(this);
-                }
-            }
             controlInputVector = Vector2.zero;
 
             GameplayCamera camera = GetComponentInChildren<GameplayCamera>();
@@ -137,16 +128,6 @@ namespace Xesin.GameplayFramework
             if (pawnCamera)
             {
                 pawnCamera.enabled = true;
-            }
-
-            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
-
-            for (int i = 0; i < gameplayComponents.Length; i++)
-            {
-                if (gameplayComponents[i] != this)
-                {
-                    gameplayComponents[i].SetOwner(this);
-                }
             }
         }
 

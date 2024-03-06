@@ -21,6 +21,16 @@ namespace Xesin.GameplayFramework
             {
                 SetAbsoluteRotation(transform.rotation);
             }
+
+            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
+
+            for (int i = 0; i < gameplayComponents.Length; i++)
+            {
+                if (gameplayComponents[i] != this)
+                {
+                    gameplayComponents[i].SetOwner(this);
+                }
+            }
         }
 
         private void LateUpdate()
