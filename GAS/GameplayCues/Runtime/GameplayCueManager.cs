@@ -1,4 +1,3 @@
-using MacFsWatcher;
 using System;
 using System.Collections.Generic;
 using Unity.Profiling;
