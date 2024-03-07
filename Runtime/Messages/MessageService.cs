@@ -5,7 +5,7 @@ using Xesin.GameplayFramework.Domain;
 namespace Xesin.GameplayFramework.Messages
 {
 
-    public static class MessageService
+    public class MessageService
     {
         [ClearOnReload(newInstance: true)]
         public static readonly Dictionary<GameplayTag, MessageStream> Streams = new Dictionary<GameplayTag, MessageStream>();
