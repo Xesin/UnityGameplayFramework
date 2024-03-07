@@ -12,7 +12,7 @@ namespace Xesin.GameplayFramework
         [SerializeField] private InputActionReference inputAction;
         [SerializeField] private Image hintPrefab;
         [SerializeField] private float compositeElementSize = 100;
-        [SerializeField] private float compositeElementPadding = 10;
+        [SerializeField] private float compositeElementPadding = 5;
         [SerializeField] private bool isSecondaryInput;
 
         private GridLayoutGroup gridLayout;
@@ -122,6 +122,7 @@ namespace Xesin.GameplayFramework
 
                 if (numCompositeBindings == 4)
                 {
+                    hintContainer.GetChild(1).SetSiblingIndex(2);
                     GameObject blankSpace = CreateBlankSpace();
                     blankSpace.transform.SetAsFirstSibling();
 
