@@ -31,7 +31,7 @@ namespace Xesin.GameplayCues
         [ExecuteOnReload]
         private static void OnReload()
         {
-            if(s_Instance)
+            if (s_Instance)
             {
                 foreach (var item in s_Instance.loadedCues)
                 {
@@ -112,7 +112,7 @@ namespace Xesin.GameplayCues
             tag = GameplayTagsContainer.Instance.ResolveTag(tag);
             parameters.cueTag = tag;
 
-            if (!loadedCues.TryGetValue(tag.value, out var loadedCue))
+            if (!loadedCues.TryGetValue(tag.value, out var loadedCue) && eventType != GameplayCueEvent.Removed)
             {
                 var handler = Addressables.LoadAssetAsync<GameObject>(tag.value);
                 loadedCue = handler.WaitForCompletion();
