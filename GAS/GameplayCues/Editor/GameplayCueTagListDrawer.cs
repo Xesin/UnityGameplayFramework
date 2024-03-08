@@ -102,15 +102,8 @@ namespace Xesin.GameplayCues
         }
 
         private void RefreshTagListProperty(SerializedProperty property)
-        {
-            var targetObject = property.serializedObject.targetObject;
-            var targetObjectClassType = targetObject.GetType();
-            var field = targetObjectClassType.GetField(property.propertyPath);
-            if (field != null)
-            {
-                objectValue = (GameplayTagList)field.GetValue(targetObject);
-            }
-
+        {           
+            objectValue = (GameplayTagList)property.boxedValue;
             tagListProperty = property.FindPropertyRelative("gameplayTags");
             currentProperty = property;
         }

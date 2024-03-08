@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Xesin.GameplayFramework.AI;
 using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayFramework
@@ -15,7 +16,7 @@ namespace Xesin.GameplayFramework
         public PlayerController playerController { get; private set; }
 
         [field: SerializeField]
-        public PlayerController aiController { get; private set; }
+        public AIController aiController { get; private set; }
 
         [field: SerializeField]
         public ScreenViewport screenViewport { get; private set; }
