@@ -48,7 +48,7 @@ namespace Xesin.GameplayCues
             if (EditorGUI.DropdownButton(assetDropDownButtonRect, new GUIContent(""), FocusType.Keyboard, EditorStyles.objectField))
             {
                 newTagPropertyPath = property.propertyPath;
-                PopupWindow.Show(assetDropDownButtonRect, new GameplayTagListSelectorPopup(this));
+                PopupWindow.Show(assetDropDownButtonRect, new GameplayTagListSelectorPopup(this, property));
             }
 
             GUI.Box(assetListBoxRect, "");
@@ -64,8 +64,13 @@ namespace Xesin.GameplayCues
             EditorGUI.EndProperty();
         }
 
-        internal void AddTag(string value)
+        internal void AddTag(string value, SerializedProperty property)
         {
+            if (NeedsReload(property))
+            {
+                RefreshTagListProperty(property);
+            }
+
             tagListProperty.InsertArrayElementAtIndex(tagListProperty.arraySize);
 
             var newProperty = tagListProperty.GetArrayElementAtIndex(tagListProperty.arraySize - 1);
@@ -83,8 +88,13 @@ namespace Xesin.GameplayCues
             RefreshTagListProperty(currentProperty);
         }
 
-        internal void RemoveTag(string value)
+        internal void RemoveTag(string value, SerializedProperty property)
         {
+            if (NeedsReload(property))
+            {
+                RefreshTagListProperty(property);
+            }
+
             for (int i = 0; i < tagListProperty.arraySize; i++)
             {
                 var arrayElement = tagListProperty.GetArrayElementAtIndex(i);
@@ -102,7 +112,7 @@ namespace Xesin.GameplayCues
         }
 
         private void RefreshTagListProperty(SerializedProperty property)
-        {           
+        {
             objectValue = (GameplayTagList)property.boxedValue;
             tagListProperty = property.FindPropertyRelative("gameplayTags");
             currentProperty = property;
@@ -139,12 +149,14 @@ namespace Xesin.GameplayCues
         string m_CurrentName = string.Empty;
 
         SearchField m_SearchField;
+        private SerializedProperty workingProperty;
 
-        public GameplayTagListSelectorPopup(GameplayCueTagListDrawer drawer)
+        public GameplayTagListSelectorPopup(GameplayCueTagListDrawer drawer, SerializedProperty workingProperty)
         {
             m_Drawer = drawer;
             m_SearchField = new SearchField();
             m_ShouldClose = false;
+            this.workingProperty = workingProperty;
         }
 
         public override void OnOpen()
@@ -168,7 +180,7 @@ namespace Xesin.GameplayCues
             {
                 if (m_TreeState == null)
                     m_TreeState = new TreeViewState();
-                m_Tree = new GameplayTagListTreeView(m_TreeState, m_Drawer);
+                m_Tree = new GameplayTagListTreeView(m_TreeState, m_Drawer, workingProperty);
                 m_Tree.Reload();
             }
 
@@ -186,12 +198,15 @@ namespace Xesin.GameplayCues
         internal class GameplayTagListTreeView : TreeView
         {
             GameplayCueTagListDrawer m_Drawer;
-            public GameplayTagListTreeView(TreeViewState state, GameplayCueTagListDrawer drawer)
+            private SerializedProperty curentProperty;
+
+            public GameplayTagListTreeView(TreeViewState state, GameplayCueTagListDrawer drawer, SerializedProperty curentProperty)
                 : base(state)
             {
                 m_Drawer = drawer;
                 showBorder = true;
                 showAlternatingRowBackgrounds = true;
+                this.curentProperty = curentProperty;
             }
 
             protected override bool CanMultiSelect(TreeViewItem item)
@@ -289,22 +304,22 @@ namespace Xesin.GameplayCues
                 GameplayTagTreeViewItem item = args.item as GameplayTagTreeViewItem;
 
                 EditorGUI.BeginChangeCheck();
-                bool isChecked = m_Drawer.objectValue.Contains(item.node.ToGameplayTag());
+                bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (isChecked)
                     {
-                        m_Drawer.AddTag(item.node.ToGameplayTagString());
+                        m_Drawer.AddTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                     else if (item.node.parent != null)
                     {
-                        m_Drawer.RemoveTag(item.node.ToGameplayTagString());
+                        m_Drawer.RemoveTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                     else
                     {
-                        m_Drawer.RemoveTag(item.node.ToGameplayTagString());
+                        m_Drawer.RemoveTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                 }
             }
