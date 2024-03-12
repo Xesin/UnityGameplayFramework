@@ -113,7 +113,18 @@ namespace Xesin.GameplayCues
 
         private void RefreshTagListProperty(SerializedProperty property)
         {
+#if UNITY_2022_1_OR_NEWER
             objectValue = (GameplayTagList)property.boxedValue;
+#else
+            var targetObject = property.serializedObject.targetObject;
+            var targetObjectClassType = targetObject.GetType();
+            var field = targetObjectClassType.GetField(property.propertyPath, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+
+            if(field != null)
+            { 
+                objectValue = (GameplayTagList)field.GetValue(targetObject);
+            }
+#endif
             tagListProperty = property.FindPropertyRelative("gameplayTags");
             currentProperty = property;
         }
@@ -304,7 +315,8 @@ namespace Xesin.GameplayCues
                 GameplayTagTreeViewItem item = args.item as GameplayTagTreeViewItem;
 
                 EditorGUI.BeginChangeCheck();
-                bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
+                //bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
+                bool isChecked = false;
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
                 if (EditorGUI.EndChangeCheck())

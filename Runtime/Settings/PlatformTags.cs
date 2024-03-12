@@ -72,10 +72,12 @@ namespace Xesin.GameplayFramework
                 UnityEditor.BuildTarget.GameCoreXboxOne => RuntimePlatform.GameCoreXboxOne,
                 UnityEditor.BuildTarget.Stadia => RuntimePlatform.Stadia,
                 UnityEditor.BuildTarget.EmbeddedLinux => RuntimePlatform.EmbeddedLinuxArm64,
+#if UNITY_2022_1_OR_NEWER
                 UnityEditor.BuildTarget.QNX => RuntimePlatform.QNXArm64,
+#endif
                 _ => null,
             };
         }
 #endif
-    }
+            }
 }

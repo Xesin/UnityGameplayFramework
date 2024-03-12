@@ -7,19 +7,24 @@ namespace Xesin.GameplayFramework
     {
         [SerializeField] private GameplayTagList tagsToCheck;
         [SerializeField] private bool invertCondition;
-        [SerializeField] private bool performFullMatch = true;
+        [SerializeField] private bool mustContainAllTags = false;
+        [SerializeField] private bool performFullTagMatches = true;
 
         protected virtual void OnEnable()
         {
             var tagList = tagsToCheck.Tags;
             var platformTags = PlatformTags.Instance;
-            bool containsAnyTag = false;
+            bool containsAnyTag = mustContainAllTags && tagList.Count > 0;
+
             for (int i = 0; i < tagList.Count; i++)
             {
-                if(platformTags.HasTagForCurrentPlatform(tagList[i], performFullMatch))
+                if (mustContainAllTags)
                 {
-                    containsAnyTag = true;
-                    break;
+                    containsAnyTag &= platformTags.HasTagForCurrentPlatform(tagList[i], performFullTagMatches);
+                }
+                else
+                {
+                    containsAnyTag |= platformTags.HasTagForCurrentPlatform(tagList[i], performFullTagMatches);
                 }
             }
 
