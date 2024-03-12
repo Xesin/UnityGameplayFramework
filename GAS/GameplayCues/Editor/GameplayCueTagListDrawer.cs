@@ -315,10 +315,18 @@ namespace Xesin.GameplayCues
                 GameplayTagTreeViewItem item = args.item as GameplayTagTreeViewItem;
 
                 EditorGUI.BeginChangeCheck();
-                //bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
-                bool isChecked = false;
+#if UNITY_2022_1_OR_NEWER
+                bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
+                bool isInHierarchy = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag(), fullMatch: false);
+#else
+                bool isInHierarchy = m_Drawer.objectValue.Contains(item.node.ToGameplayTag(), fullMatch: false);
+                bool isChecked = m_Drawer.objectValue.Contains(item.node.ToGameplayTag());
+#endif
+                EditorGUI.showMixedValue = isInHierarchy && !isChecked;
+
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
+                EditorGUI.showMixedValue = false;
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (isChecked)

@@ -234,9 +234,10 @@ namespace Xesin.GameplayCues
 
                 EditorGUI.BeginChangeCheck();
                 bool isChecked = m_Drawer.currentTag.MatchesTag(item.node.ToGameplayTag());
+
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
-                if(EditorGUI.EndChangeCheck())
+                if (EditorGUI.EndChangeCheck())
                 {
                     if (isChecked)
                     {
