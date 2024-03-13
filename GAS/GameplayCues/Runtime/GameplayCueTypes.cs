@@ -177,6 +177,54 @@ namespace Xesin.GameplayCues
 
             return false;
         }
+
+        public bool ContainsAny(IList<GameplayTag> tags, bool fullMatch = true)
+        {
+            for (int i = 0; i < gameplayTags.Count; i++)
+            {
+                for (int j = 0; j < tags.Count; j++)
+                {
+                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void AddTag(GameplayTag tag)
+        {
+            gameplayTags.Add(tag);
+        }
+
+        public void AddTags(params GameplayTag[] tags)
+        {
+            for (int i = 0; i < tags.Length; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void RemoveSingleTag(GameplayTag tag)
+        {
+            for (int i = gameplayTags.Count - 1; i >= 0; i--)
+            {
+                if (gameplayTags[i].MatchesTag(tag, partially: false))
+                {
+                    gameplayTags.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        public void RemoveAllTags(GameplayTag tag)
+        {
+            for (int i = gameplayTags.Count - 1; i >= 0; i--)
+            {
+                if (gameplayTags[i].MatchesTag(tag, partially: false))
+                    gameplayTags.RemoveAt(i);
+            }
+        }
     }
 
 
