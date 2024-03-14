@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -136,13 +137,15 @@ namespace Xesin.GameplayCues
         public GameplayTagList(params GameplayTag[] initialValues)
         {
             gameplayTags = new List<GameplayTag>();
-            gameplayTags.AddRange(initialValues);
+            if (initialValues != null)
+                gameplayTags.AddRange(initialValues);
         }
 
         public GameplayTagList(IReadOnlyList<GameplayTag> initialValues)
         {
             gameplayTags = new List<GameplayTag>();
-            gameplayTags.AddRange(initialValues);
+            if (initialValues != null)
+                gameplayTags.AddRange(initialValues);
         }
 
         public bool Contains(GameplayTag tag, bool fullMatch = true)
@@ -164,10 +167,31 @@ namespace Xesin.GameplayCues
                 {
                     if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
                         numMatches++;
+
+                    if (numMatches == tags.Length)
+                        return true;
                 }
             }
 
             return numMatches == tags.Length;
+        }
+
+        public bool Contains(IReadOnlyList<GameplayTag> tags, bool fullMatch = true)
+        {
+            int numMatches = 0;
+            for (int i = 0; i < gameplayTags.Count; i++)
+            {
+                for (int j = 0; j < tags.Count; j++)
+                {
+                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                        numMatches++;
+
+                    if (numMatches == tags.Count)
+                        return true;
+                }
+            }
+
+            return numMatches == tags.Count;
         }
 
         public bool ContainsAny(GameplayTag[] tags, bool fullMatch = true)
