@@ -139,6 +139,12 @@ namespace Xesin.GameplayCues
             gameplayTags.AddRange(initialValues);
         }
 
+        public GameplayTagList(IReadOnlyList<GameplayTag> initialValues)
+        {
+            gameplayTags = new List<GameplayTag>();
+            gameplayTags.AddRange(initialValues);
+        }
+
         public bool Contains(GameplayTag tag, bool fullMatch = true)
         {
             for (int i = 0; i < gameplayTags.Count; i++)
@@ -178,7 +184,7 @@ namespace Xesin.GameplayCues
             return false;
         }
 
-        public bool ContainsAny(IList<GameplayTag> tags, bool fullMatch = true)
+        public bool ContainsAny(IReadOnlyList<GameplayTag> tags, bool fullMatch = true)
         {
             for (int i = 0; i < gameplayTags.Count; i++)
             {
@@ -202,6 +208,30 @@ namespace Xesin.GameplayCues
             for (int i = 0; i < tags.Length; i++)
             {
                 gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(IReadOnlyList<GameplayTag> tags)
+        {
+            for (int i = 0; i < tags.Count; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(IList<GameplayTag> tags)
+        {
+            for (int i = 0; i < tags.Count; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(GameplayTagList tags)
+        {
+            for (int i = 0; i < tags.Tags.Count; i++)
+            {
+                gameplayTags.Add(tags.Tags[i]);
             }
         }
 
@@ -575,7 +605,7 @@ namespace Xesin.GameplayCues
                 Transform spawnedTransform = spawnedFX.transform; // Caching transform so no extra calls to the C++ side
 
                 spawnedTransform.localPosition += spawnContext.cueParameters.location + placementInfo.PositionOffset;
-                if(placementInfo.attachPolicy == GameplayCueNotify_AttachPolicy.DoNotAttachFollowRotation)
+                if (placementInfo.attachPolicy == GameplayCueNotify_AttachPolicy.DoNotAttachFollowRotation)
                 {
                     spawnedTransform.rotation *= transform.rotation;
                 }
@@ -622,7 +652,7 @@ namespace Xesin.GameplayCues
 
         private void OnReleaseInstance(ParticleSystem particleSystem)
         {
-            if(particleSystem.main.stopAction == ParticleSystemStopAction.Destroy) // prevent destroying
+            if (particleSystem.main.stopAction == ParticleSystemStopAction.Destroy) // prevent destroying
             {
                 var mainModule = particleSystem.main;
                 mainModule.stopAction = ParticleSystemStopAction.Disable;
@@ -637,7 +667,7 @@ namespace Xesin.GameplayCues
 
         private void OnDestroyItem(ParticleSystem particleSystem)
         {
-            if(particleSystem)
+            if (particleSystem)
                 Object.Destroy(particleSystem.gameObject);
         }
 
@@ -880,7 +910,7 @@ namespace Xesin.GameplayCues
 
         private void OnDestroyItem(CueCustomItem item)
         {
-            if(item)
+            if (item)
                 Object.Destroy(item.gameObject);
         }
     }
