@@ -8,7 +8,7 @@ namespace Xesin.GameplayFramework
         public bool useAbsoluteRotation = false;
         public bool updateVelocity = false;
         public bool useControlRotation = false;
-        public Vector3 Velocity { get; protected set; }
+        public virtual Vector3 Velocity { get; protected set; }
 
         protected Vector3 oldPosition;
         protected Quaternion absoluteRotation = Quaternion.identity;
@@ -51,10 +51,15 @@ namespace Xesin.GameplayFramework
 
         protected virtual void FixedUpdate()
         {
-            if (!updateVelocity) return;
+            if (!enabled || !updateVelocity) return;
 
             Velocity = (transform.position - oldPosition) / Time.fixedDeltaTime;
             oldPosition = transform.position;
+        }
+
+        protected virtual void OnDisable()
+        {
+            Velocity = Vector3.zero;
         }
 
         public void SetAbsoluteRotation(Quaternion rotation)
