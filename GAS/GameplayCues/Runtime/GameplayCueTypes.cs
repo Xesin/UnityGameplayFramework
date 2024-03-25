@@ -132,7 +132,7 @@ namespace Xesin.GameplayCues
         [SerializeField]
         private List<GameplayTag> gameplayTags;
 
-        public IReadOnlyList<GameplayTag> Tags => gameplayTags;
+        public IReadOnlyList<GameplayTag> Tags => gameplayTags ??= new List<GameplayTag>();
 
         public GameplayTagList(params GameplayTag[] initialValues)
         {
@@ -150,9 +150,9 @@ namespace Xesin.GameplayCues
 
         public bool Contains(GameplayTag tag, bool fullMatch = true)
         {
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
-                if (gameplayTags[i].MatchesTag(tag, !fullMatch)) return true;
+                if (Tags[i].MatchesTag(tag, !fullMatch)) return true;
             }
 
             return false;
@@ -161,11 +161,11 @@ namespace Xesin.GameplayCues
         public bool Contains(GameplayTag[] tags, bool fullMatch = true)
         {
             int numMatches = 0;
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
                 for (int j = 0; j < tags.Length; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         numMatches++;
 
                     if (numMatches == tags.Length)
@@ -179,11 +179,11 @@ namespace Xesin.GameplayCues
         public bool Contains(IReadOnlyList<GameplayTag> tags, bool fullMatch = true)
         {
             int numMatches = 0;
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
                 for (int j = 0; j < tags.Count; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         numMatches++;
 
                     if (numMatches == tags.Count)
@@ -196,11 +196,11 @@ namespace Xesin.GameplayCues
 
         public bool ContainsAny(GameplayTag[] tags, bool fullMatch = true)
         {
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
                 for (int j = 0; j < tags.Length; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         return true;
                 }
             }
@@ -214,7 +214,7 @@ namespace Xesin.GameplayCues
             {
                 for (int j = 0; j < tags.Count; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         return true;
                 }
             }
@@ -224,11 +224,13 @@ namespace Xesin.GameplayCues
 
         public void AddTag(GameplayTag tag)
         {
+            gameplayTags ??= new List<GameplayTag>();
             gameplayTags.Add(tag);
         }
 
         public void AddTags(params GameplayTag[] tags)
         {
+            gameplayTags ??= new List<GameplayTag>();
             for (int i = 0; i < tags.Length; i++)
             {
                 gameplayTags.Add(tags[i]);
@@ -237,6 +239,7 @@ namespace Xesin.GameplayCues
 
         public void AddTags(IReadOnlyList<GameplayTag> tags)
         {
+            gameplayTags ??= new List<GameplayTag>();
             for (int i = 0; i < tags.Count; i++)
             {
                 gameplayTags.Add(tags[i]);
@@ -245,6 +248,7 @@ namespace Xesin.GameplayCues
 
         public void AddTags(IList<GameplayTag> tags)
         {
+            gameplayTags ??= new List<GameplayTag>();
             for (int i = 0; i < tags.Count; i++)
             {
                 gameplayTags.Add(tags[i]);
@@ -253,6 +257,7 @@ namespace Xesin.GameplayCues
 
         public void AddTags(GameplayTagList tags)
         {
+            gameplayTags ??= new List<GameplayTag>();
             for (int i = 0; i < tags.Tags.Count; i++)
             {
                 gameplayTags.Add(tags.Tags[i]);
@@ -261,9 +266,9 @@ namespace Xesin.GameplayCues
 
         public void RemoveSingleTag(GameplayTag tag)
         {
-            for (int i = gameplayTags.Count - 1; i >= 0; i--)
+            for (int i = Tags.Count - 1; i >= 0; i--)
             {
-                if (gameplayTags[i].MatchesTag(tag, partially: false))
+                if (Tags[i].MatchesTag(tag, partially: false))
                 {
                     gameplayTags.RemoveAt(i);
                     break;
@@ -273,9 +278,9 @@ namespace Xesin.GameplayCues
 
         public void RemoveAllTags(GameplayTag tag)
         {
-            for (int i = gameplayTags.Count - 1; i >= 0; i--)
+            for (int i = Tags.Count - 1; i >= 0; i--)
             {
-                if (gameplayTags[i].MatchesTag(tag, partially: false))
+                if (Tags[i].MatchesTag(tag, partially: false))
                     gameplayTags.RemoveAt(i);
             }
         }
