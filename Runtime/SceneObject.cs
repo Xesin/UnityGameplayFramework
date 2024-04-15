@@ -33,7 +33,7 @@ namespace Xesin.GameplayFramework
             }
         }
 
-        private void LateUpdate()
+        protected virtual void LateUpdate()
         {
             if (useControlRotation)
             {
