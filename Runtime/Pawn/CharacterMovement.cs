@@ -906,7 +906,7 @@ namespace Xesin.GameplayFramework
             }
         }
 
-        public void TeleportTo(Vector3 position)
+        public virtual void TeleportTo(Vector3 position)
         {
             transform.position = position;
             Physics.SyncTransforms();
