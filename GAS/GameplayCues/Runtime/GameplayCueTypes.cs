@@ -55,7 +55,7 @@ namespace Xesin.GameplayCues
         internal GameplayTag(string initValue)
         {
             value = initValue;
-            parentTag = GetParentTagValue(initValue);
+            parentTag = string.Empty;
             originalTagValue = initValue;
         }
 
