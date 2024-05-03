@@ -200,8 +200,9 @@ namespace Xesin.GameplayCues
         /// <returns>A <see cref="GameplayTag"/> with all redirects applied</returns>
         public GameplayTag ResolveTag(GameplayTag gameplayTag)
         {
-            foreach (var redirector in tagRedirects_set)
+            for (int i = 0; i < tagRedirects.Count; i++)
             {
+                var redirector = tagRedirects[i];
                 if (redirector.originalTagValue.GetHashCode() == gameplayTag.value.GetHashCode())
                 {
                     gameplayTag.value = redirector.redirectectValue;
