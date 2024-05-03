@@ -80,7 +80,7 @@ namespace Xesin.GameplayCues
             var tagValue = GameplayTagsContainer.RequestGameplayTag(value);
 
             valueProperty.stringValue = tagValue.value;
-            parentProperty.stringValue = tagValue.parentTag;
+            parentProperty.stringValue = tagValue.ParentTag;
 
             TriggerOnValidate(currentProperty);
             TriggerOnValidate(tagListProperty);

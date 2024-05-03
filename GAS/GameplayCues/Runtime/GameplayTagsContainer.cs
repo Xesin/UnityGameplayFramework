@@ -13,7 +13,7 @@ namespace Xesin.GameplayCues
 
         public override bool Equals(object obj)
         {
-            if(obj is string otherID)
+            if (obj is string otherID)
             {
                 return id.Equals(otherID);
             }
@@ -83,10 +83,10 @@ namespace Xesin.GameplayCues
         public static GameplayTag RequestGameplayTag(string tag)
         {
             GameplayTag result = Instance.ResolveTag(new GameplayTag(tag));
-            
-            if(!Instance.IsValid(result))
+
+            if (!Instance.IsValid(result))
             {
-                if(Application.isPlaying)
+                if (Application.isPlaying)
                     Debug.LogWarning("Requested invalid tag: " + tag + " is missing");
             }
 
@@ -141,9 +141,9 @@ namespace Xesin.GameplayCues
             UnityEditor.AssetDatabase.SaveAssetIfDirty(this);
             BuildNodeTree();
 
-            if (!string.IsNullOrEmpty(value.parentTag))
+            if (!string.IsNullOrEmpty(value.ParentTag))
             {
-                AddGameplayTag(new GameplayTag(value.parentTag));
+                AddGameplayTag(new GameplayTag(value.ParentTag));
             }
         }
 
@@ -202,10 +202,9 @@ namespace Xesin.GameplayCues
         {
             foreach (var redirector in tagRedirects_set)
             {
-                if(redirector.originalTagValue.GetHashCode() == gameplayTag.value.GetHashCode())
+                if (redirector.originalTagValue.GetHashCode() == gameplayTag.value.GetHashCode())
                 {
                     gameplayTag.value = redirector.redirectectValue;
-                    gameplayTag.parentTag = GameplayTag.GetParentTagValue(gameplayTag.value);
                     gameplayTag = ResolveTag(gameplayTag);
                     break;
                 }
@@ -301,7 +300,7 @@ namespace Xesin.GameplayCues
 
         public void OnAfterDeserialize()
         {
-            
+
             for (int i = 0; i < addedTags.Count; i++)
             {
                 addedTags_set.Add(addedTags[i]);

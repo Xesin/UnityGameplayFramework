@@ -44,7 +44,10 @@ namespace Xesin.GameplayCues
     public struct GameplayTag
     {
         public string value;
-        public string parentTag;
+        [SerializeField]
+        private string parentTag;
+
+        public string ParentTag => string.IsNullOrEmpty(parentTag) ? GetParentTagValue(value) : parentTag;
 
         [System.NonSerialized]
         public string originalTagValue;
@@ -69,11 +72,6 @@ namespace Xesin.GameplayCues
             {
                 return string.Empty;
             }
-        }
-
-        public GameplayTag ParentTag()
-        {
-            return GameplayTagsContainer.RequestGameplayTag(parentTag);
         }
 
         public bool MatchesTag(GameplayTag gameplayTag, bool partially = true)

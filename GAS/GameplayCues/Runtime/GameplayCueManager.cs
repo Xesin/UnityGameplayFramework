@@ -122,7 +122,7 @@ namespace Xesin.GameplayCues
             if (loadedCue == null)
             {
                 //Didn't even load it, so IsOverride should not apply.
-                RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 return;
             }
 
@@ -134,15 +134,15 @@ namespace Xesin.GameplayCues
 
                     if (!staticCue.isOverride)
                     {
-                        RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                        RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                     }
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(tag.parentTag)) return;
+                    if (string.IsNullOrEmpty(tag.ParentTag)) return;
 
                     //Didn't even handle it, so IsOverride should not apply.
-                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                    RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 }
 
                 return;
@@ -157,7 +157,7 @@ namespace Xesin.GameplayCues
                     {
                         if (!spawnedCue.isOverride)
                         {
-                            RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                            RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                         }
 
                         spawnedCue.HandleGameplayCue(target, eventType, parameters);
@@ -167,7 +167,7 @@ namespace Xesin.GameplayCues
                 else
                 {
                     //Didn't even handle it, so IsOverride should not apply.
-                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                    RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 }
             }
         }
