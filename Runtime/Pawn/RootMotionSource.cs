@@ -26,7 +26,6 @@ namespace Xesin.GameplayFramework
     [RequireComponent(typeof(Animator))]
     public class RootMotionSource : GameplayObject
     {
-        Character characterOwner;
         Animator animator;
         Vector3 acumulatedPosition;
         Quaternion acumulatedRotation = Quaternion.identity;
@@ -34,12 +33,6 @@ namespace Xesin.GameplayFramework
         private void Awake()
         {
             animator = GetComponent<Animator>();
-        }
-
-        public override void SetOwner(SceneObject obj)
-        {
-            base.SetOwner(obj);
-            characterOwner = (Character)obj;
         }
 
         private void OnAnimatorMove()
