@@ -32,7 +32,7 @@ public class Character : Pawn
         base.Restart();
     }
 
-    public void OnMovementModeChanged(MovementMode prevMovementMode)
+    public virtual void OnMovementModeChanged(MovementMode prevMovementMode)
     {
         if (!pressedJump || !characterMovement.IsFalling())
         {
