@@ -4,10 +4,10 @@ namespace Xesin.GameplayFramework
 {
     public abstract class GameplayObject : MonoBehaviour
     {
-        public GameplayObject Owner { get; private set; }
+        public SceneObject Owner { get; private set; }
         
 
-        public virtual void SetOwner(GameplayObject obj)
+        public virtual void SetOwner(SceneObject obj)
         {
             Owner = obj;
         }

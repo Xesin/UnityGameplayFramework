@@ -1,10 +1,25 @@
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+using Xesin.GameplayFramework.Domain;
 
 namespace Xesin.GameplayCues
 {
     public abstract class GameplayCueNotify_Static : GameplayCueNotify_GameObject
     {
+
+        [ExecuteOnReload]
+        private static void OnReload()
+        {
+            var allCues = Resources.FindObjectsOfTypeAll<GameplayCueNotify_Static>();
+            for (int i = 0; i < allCues.Length; i++)
+            {
+                allCues[i].ResetCues();
+            }
+        }
+
+        protected virtual void ResetCues()
+        {
+
+        }
 
         public override bool CanBeRecycled()
         {

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Xesin.GameplayCues
 {
-    [CreateAssetMenu(menuName = "Xaloc/GameplayCues/Parameters", fileName = "CueParameter.asset")]
+    [CreateAssetMenu(menuName = "Gameplay/GameplayCues/Parameters", fileName = "CueParameter.asset")]
     public class GameplayCueParamentersScriptable : ScriptableObject
     {
         public Vector3 location;

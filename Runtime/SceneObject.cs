@@ -8,7 +8,7 @@ namespace Xesin.GameplayFramework
         public bool useAbsoluteRotation = false;
         public bool updateVelocity = false;
         public bool useControlRotation = false;
-        public Vector3 Velocity { get; protected set; }
+        public virtual Vector3 Velocity { get; protected set; }
 
         protected Vector3 oldPosition;
         protected Quaternion absoluteRotation = Quaternion.identity;
@@ -21,9 +21,19 @@ namespace Xesin.GameplayFramework
             {
                 SetAbsoluteRotation(transform.rotation);
             }
+
+            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
+
+            for (int i = 0; i < gameplayComponents.Length; i++)
+            {
+                if (gameplayComponents[i] != this)
+                {
+                    gameplayComponents[i].SetOwner(this);
+                }
+            }
         }
 
-        private void LateUpdate()
+        protected virtual void LateUpdate()
         {
             if (useControlRotation)
             {
@@ -41,10 +51,15 @@ namespace Xesin.GameplayFramework
 
         protected virtual void FixedUpdate()
         {
-            if (!updateVelocity) return;
+            if (!enabled || !updateVelocity) return;
 
             Velocity = (transform.position - oldPosition) / Time.fixedDeltaTime;
             oldPosition = transform.position;
+        }
+
+        protected virtual void OnDisable()
+        {
+            Velocity = Vector3.zero;
         }
 
         public void SetAbsoluteRotation(Quaternion rotation)

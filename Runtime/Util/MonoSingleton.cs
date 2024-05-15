@@ -2,6 +2,7 @@
 using UnityEditor;
 #endif
 using UnityEngine;
+using Xesin.GameplayFramework.Domain;
 
 namespace Xesin.GameplayFramework.Utils
 {
@@ -12,7 +13,8 @@ namespace Xesin.GameplayFramework.Utils
     /// <typeparam name="T">The singleton type.</typeparam>
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
-        static T s_Instance;
+        [ClearOnReload]
+        protected static T s_Instance;
 
         /// <summary>
         /// Indicates whether or not there is an existing instance of the singleton.
@@ -96,7 +98,7 @@ namespace Xesin.GameplayFramework.Utils
 
         void PlayModeChanged(PlayModeStateChange state)
         {
-            if (state == PlayModeStateChange.ExitingPlayMode)
+            if (state == PlayModeStateChange.EnteredEditMode)
             {
                 if (Exists)
                 {

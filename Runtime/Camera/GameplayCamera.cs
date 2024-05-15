@@ -10,6 +10,7 @@ namespace Xesin.GameplayFramework
 #else
     [RequireComponent(typeof(Camera))]
 #endif
+    [DefaultExecutionOrder(10)]
     public class GameplayCamera : SceneObject
     {
 #if GAMEPLAY_USES_CINEMACHINE

@@ -93,5 +93,15 @@ namespace Xesin.GameplayFramework
         {
             uiViewport.SetOutputCamera(camera);
         }
+
+        public Pawn GetControlledPawn()
+        {
+            if(currentControledPlayer)
+            {
+                return currentControledPlayer.GetPawn();
+            }
+
+            return null;
+        }
     }
 }

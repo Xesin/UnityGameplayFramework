@@ -25,25 +25,34 @@ namespace Xesin.GameplayFramework
         protected virtual void LateUpdate()
         {
             UpdateRotation(Time.deltaTime);
-
-            rotationInput = Vector3.zero;
         }
 
         private void OnDestroy()
         {
             if (possesedPawn)
+            {
+                inputComponent.ClearBinds(possesedPawn);
                 possesedPawn.Restart();
+            }
 
             possesedPawn = null;
+
 
             playerControllers.Remove(this);
         }
 
+        protected Vector3 ConsumeInput()
+        {
+            Vector3 input = rotationInput;
+            rotationInput = Vector3.zero;
+            return input;
+        }
 
-        private void UpdateRotation(float deltaTime)
+        protected virtual void UpdateRotation(float deltaTime)
         {
             // Calculate Delta to be applied on ViewRotation
-            Vector3 DeltaRot = rotationInput;
+            Vector3 DeltaRot = ConsumeInput();
+
             DeltaRot.x = -DeltaRot.x;
             Vector3 ViewRotation = GetControlRotation();
 
@@ -139,19 +148,22 @@ namespace Xesin.GameplayFramework
         public void SetInputUIOnly()
         {
             inputComponent.DisableInput();
-            player.UIInputModule.enabled = true;
+            if (player.UIInputModule)
+                player.UIInputModule.enabled = true;
         }
 
         public void SetInputGameplayOnly()
         {
             inputComponent.ActivateInput();
-            player.UIInputModule.enabled = false;
+            if(player.UIInputModule)
+                player.UIInputModule.enabled = false;
         }
 
         public void SetInputGameplayAndUI()
         {
             inputComponent.ActivateInput();
-            player.UIInputModule.enabled = true;
+            if (player.UIInputModule)
+                player.UIInputModule.enabled = true;
         }
     }
 }

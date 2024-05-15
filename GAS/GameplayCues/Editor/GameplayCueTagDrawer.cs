@@ -52,11 +52,6 @@ namespace Xesin.GameplayCues
             {
                 property.serializedObject.ApplyModifiedProperties();
                 property.serializedObject.Update();
-
-                // This is actually what triggers the OnValidate() method.
-                // Since 'm_EditorAssetChanged' is of a recognized type and is a sub-property of AssetReference, both
-                // are flagged as changed and OnValidate() is called.
-                property.FindPropertyRelative("m_EditorAssetChanged").boolValue = false;
             }
         }
     }
@@ -169,7 +164,10 @@ namespace Xesin.GameplayCues
 
             private void RecursiveAdd(List<TreeViewItem> treeViews, TreeViewItem viewItem)
             {
-                if (viewItem.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
+                GameplayTag searchAsTag = GameplayTagsContainer.Instance.ResolveTag(searchString);
+                GameplayTagTreeViewItem item = viewItem as GameplayTagTreeViewItem;
+
+                if (viewItem.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0 || item.node.ToGameplayTag().MatchesTag(searchAsTag, false))
                 {
                     if (!treeViews.Contains(viewItem))
                         treeViews.Add(viewItem);
@@ -196,7 +194,15 @@ namespace Xesin.GameplayCues
 
             private bool RecursiveSearch(List<TreeViewItem> treeViews, TreeViewItem viewItem)
             {
+                GameplayTagTreeViewItem item = viewItem as GameplayTagTreeViewItem;
+                GameplayTag searchAsTag = GameplayTagsContainer.Instance.ResolveTag(searchString);
+
                 if (viewItem.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+
+                if (item.node.ToGameplayTag().MatchesTag(searchAsTag, false))
                 {
                     return true;
                 }
@@ -228,9 +234,10 @@ namespace Xesin.GameplayCues
 
                 EditorGUI.BeginChangeCheck();
                 bool isChecked = m_Drawer.currentTag.MatchesTag(item.node.ToGameplayTag());
+
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
-                if(EditorGUI.EndChangeCheck())
+                if (EditorGUI.EndChangeCheck())
                 {
                     if (isChecked)
                     {

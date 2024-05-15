@@ -1,15 +1,30 @@
 using UnityEngine;
+using Xesin.GameplayFramework.AI;
 using Xesin.GameplayFramework.Input;
 
 namespace Xesin.GameplayFramework
 {
-    public class Pawn : GameplayObject
+    public enum AutoPossesValue
+    {
+        None = -2,
+        AI = -1,
+        Player1 = 0,
+        Player2 = 1,
+        Player3 = 2,
+        Player4 = 3,
+    }
+
+    public class Pawn : SceneObject
     {
         public float BaseEyeHeight = 1.5f;
 
         public bool useControllerYaw;
         public bool useControllerPitch;
         public bool useControllerRoll;
+
+        [SerializeField] private AIController aiController;
+
+        public AutoPossesValue autoPossesOnStart = AutoPossesValue.None;
 
         public Controller Controller => currentController;
 
@@ -20,18 +35,10 @@ namespace Xesin.GameplayFramework
         private Vector3 controlInputVector;
         private Vector3 lastControlInputVector;
 
-        protected virtual void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             movementComponent = GetComponent<PawnMovement>();
-            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
-
-            for (int i = 0; i < gameplayComponents.Length; i++)
-            {
-                if (gameplayComponents[i] != this)
-                {
-                    gameplayComponents[i].SetOwner(this);
-                }
-            }
             controlInputVector = Vector2.zero;
 
             GameplayCamera camera = GetComponentInChildren<GameplayCamera>();
@@ -43,6 +50,32 @@ namespace Xesin.GameplayFramework
             Restart();
         }
 
+        protected virtual void Start()
+        {
+            if (autoPossesOnStart == AutoPossesValue.None) return;
+            if(autoPossesOnStart == AutoPossesValue.AI && Controller == null)
+            {
+                SpawnDefaultController();
+                return;
+            }
+        }
+
+        protected virtual void OnEnable()
+        {
+            if(Controller is PlayerController player)
+            {
+                SetupPlayerInput(player.GetInputComponent());
+            }
+        }
+
+        protected virtual void OnDisable()
+        {
+            if (Controller is PlayerController player)
+            {
+                ClearPlayerInput(player.GetInputComponent());
+            }
+        }
+
         protected virtual void OnDestroy()
         {
             Unpossesed();
@@ -51,6 +84,20 @@ namespace Xesin.GameplayFramework
         private void OnControllerColliderHit(ControllerColliderHit hit)
         {
             PushRigidBodies(hit);
+        }
+
+        public void SpawnDefaultController()
+        {
+            if(Controller != null)
+            {
+                return;
+            }
+
+            if(aiController != null)
+            {
+                AIController newController = Instantiate(aiController);
+                newController.Posses(this);
+            }
         }
 
         private void PushRigidBodies(ControllerColliderHit hit)
@@ -81,16 +128,6 @@ namespace Xesin.GameplayFramework
             if (pawnCamera)
             {
                 pawnCamera.enabled = true;
-            }
-
-            var gameplayComponents = GetComponentsInChildren<GameplayObject>(true);
-
-            for (int i = 0; i < gameplayComponents.Length; i++)
-            {
-                if (gameplayComponents[i] != this)
-                {
-                    gameplayComponents[i].SetOwner(this);
-                }
             }
         }
 

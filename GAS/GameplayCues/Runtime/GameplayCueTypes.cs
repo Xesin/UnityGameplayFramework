@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -43,7 +44,10 @@ namespace Xesin.GameplayCues
     public struct GameplayTag
     {
         public string value;
-        public string parentTag;
+        [SerializeField]
+        private string parentTag;
+
+        public string ParentTag => string.IsNullOrEmpty(parentTag) ? GetParentTagValue(value) : parentTag;
 
         [System.NonSerialized]
         public string originalTagValue;
@@ -51,7 +55,7 @@ namespace Xesin.GameplayCues
         internal GameplayTag(string initValue)
         {
             value = initValue;
-            parentTag = GetParentTagValue(initValue);
+            parentTag = string.Empty;
             originalTagValue = initValue;
         }
 
@@ -68,11 +72,6 @@ namespace Xesin.GameplayCues
             {
                 return string.Empty;
             }
-        }
-
-        public GameplayTag ParentTag()
-        {
-            return GameplayTagsContainer.RequestGameplayTag(parentTag);
         }
 
         public bool MatchesTag(GameplayTag gameplayTag, bool partially = true)
@@ -113,6 +112,16 @@ namespace Xesin.GameplayCues
             if (obj is not GameplayTag tag) return false;
             return tag.value.GetHashCode() == value.GetHashCode();
         }
+
+        public static implicit operator GameplayTag(string stringValue)
+        {
+            return GameplayTagsContainer.RequestGameplayTag(stringValue);
+        }
+
+        public static implicit operator string(GameplayTag tagValue)
+        {
+            return tagValue.value;
+        }
     }
 
     [System.Serializable]
@@ -121,19 +130,27 @@ namespace Xesin.GameplayCues
         [SerializeField]
         private List<GameplayTag> gameplayTags;
 
-        public IReadOnlyList<GameplayTag> Tags => gameplayTags;
+        public IReadOnlyList<GameplayTag> Tags => gameplayTags ??= new List<GameplayTag>();
 
         public GameplayTagList(params GameplayTag[] initialValues)
         {
             gameplayTags = new List<GameplayTag>();
-            gameplayTags.AddRange(initialValues);
+            if (initialValues != null)
+                gameplayTags.AddRange(initialValues);
+        }
+
+        public GameplayTagList(IReadOnlyList<GameplayTag> initialValues)
+        {
+            gameplayTags = new List<GameplayTag>();
+            if (initialValues != null)
+                gameplayTags.AddRange(initialValues);
         }
 
         public bool Contains(GameplayTag tag, bool fullMatch = true)
         {
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
-                if (gameplayTags[i].MatchesTag(tag, !fullMatch)) return true;
+                if (Tags[i].MatchesTag(tag, !fullMatch)) return true;
             }
 
             return false;
@@ -142,30 +159,128 @@ namespace Xesin.GameplayCues
         public bool Contains(GameplayTag[] tags, bool fullMatch = true)
         {
             int numMatches = 0;
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
                 for (int j = 0; j < tags.Length; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         numMatches++;
+
+                    if (numMatches == tags.Length)
+                        return true;
                 }
             }
 
             return numMatches == tags.Length;
         }
 
+        public bool Contains(IReadOnlyList<GameplayTag> tags, bool fullMatch = true)
+        {
+            int numMatches = 0;
+            for (int i = 0; i < Tags.Count; i++)
+            {
+                for (int j = 0; j < tags.Count; j++)
+                {
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
+                        numMatches++;
+
+                    if (numMatches == tags.Count)
+                        return true;
+                }
+            }
+
+            return numMatches == tags.Count;
+        }
+
         public bool ContainsAny(GameplayTag[] tags, bool fullMatch = true)
         {
-            for (int i = 0; i < gameplayTags.Count; i++)
+            for (int i = 0; i < Tags.Count; i++)
             {
                 for (int j = 0; j < tags.Length; j++)
                 {
-                    if (gameplayTags[i].MatchesTag(tags[j], !fullMatch))
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
                         return true;
                 }
             }
 
             return false;
+        }
+
+        public bool ContainsAny(IReadOnlyList<GameplayTag> tags, bool fullMatch = true)
+        {
+            for (int i = 0; i < gameplayTags.Count; i++)
+            {
+                for (int j = 0; j < tags.Count; j++)
+                {
+                    if (Tags[i].MatchesTag(tags[j], !fullMatch))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void AddTag(GameplayTag tag)
+        {
+            gameplayTags ??= new List<GameplayTag>();
+            gameplayTags.Add(tag);
+        }
+
+        public void AddTags(params GameplayTag[] tags)
+        {
+            gameplayTags ??= new List<GameplayTag>();
+            for (int i = 0; i < tags.Length; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(IReadOnlyList<GameplayTag> tags)
+        {
+            gameplayTags ??= new List<GameplayTag>();
+            for (int i = 0; i < tags.Count; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(IList<GameplayTag> tags)
+        {
+            gameplayTags ??= new List<GameplayTag>();
+            for (int i = 0; i < tags.Count; i++)
+            {
+                gameplayTags.Add(tags[i]);
+            }
+        }
+
+        public void AddTags(GameplayTagList tags)
+        {
+            gameplayTags ??= new List<GameplayTag>();
+            for (int i = 0; i < tags.Tags.Count; i++)
+            {
+                gameplayTags.Add(tags.Tags[i]);
+            }
+        }
+
+        public void RemoveSingleTag(GameplayTag tag)
+        {
+            for (int i = Tags.Count - 1; i >= 0; i--)
+            {
+                if (Tags[i].MatchesTag(tag, partially: false))
+                {
+                    gameplayTags.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        public void RemoveAllTags(GameplayTag tag)
+        {
+            for (int i = Tags.Count - 1; i >= 0; i--)
+            {
+                if (Tags[i].MatchesTag(tag, partially: false))
+                    gameplayTags.RemoveAt(i);
+            }
         }
     }
 
@@ -517,7 +632,7 @@ namespace Xesin.GameplayCues
                 Transform spawnedTransform = spawnedFX.transform; // Caching transform so no extra calls to the C++ side
 
                 spawnedTransform.localPosition += spawnContext.cueParameters.location + placementInfo.PositionOffset;
-                if(placementInfo.attachPolicy == GameplayCueNotify_AttachPolicy.DoNotAttachFollowRotation)
+                if (placementInfo.attachPolicy == GameplayCueNotify_AttachPolicy.DoNotAttachFollowRotation)
                 {
                     spawnedTransform.rotation *= transform.rotation;
                 }
@@ -564,7 +679,7 @@ namespace Xesin.GameplayCues
 
         private void OnReleaseInstance(ParticleSystem particleSystem)
         {
-            if(particleSystem.main.stopAction == ParticleSystemStopAction.Destroy) // prevent destroying
+            if (particleSystem.main.stopAction == ParticleSystemStopAction.Destroy) // prevent destroying
             {
                 var mainModule = particleSystem.main;
                 mainModule.stopAction = ParticleSystemStopAction.Disable;
@@ -579,7 +694,7 @@ namespace Xesin.GameplayCues
 
         private void OnDestroyItem(ParticleSystem particleSystem)
         {
-            if(particleSystem)
+            if (particleSystem)
                 Object.Destroy(particleSystem.gameObject);
         }
 
@@ -822,7 +937,7 @@ namespace Xesin.GameplayCues
 
         private void OnDestroyItem(CueCustomItem item)
         {
-            if(item)
+            if (item)
                 Object.Destroy(item.gameObject);
         }
     }

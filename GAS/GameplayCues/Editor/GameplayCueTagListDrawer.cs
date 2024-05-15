@@ -48,7 +48,7 @@ namespace Xesin.GameplayCues
             if (EditorGUI.DropdownButton(assetDropDownButtonRect, new GUIContent(""), FocusType.Keyboard, EditorStyles.objectField))
             {
                 newTagPropertyPath = property.propertyPath;
-                PopupWindow.Show(assetDropDownButtonRect, new GameplayTagListSelectorPopup(this));
+                PopupWindow.Show(assetDropDownButtonRect, new GameplayTagListSelectorPopup(this, property));
             }
 
             GUI.Box(assetListBoxRect, "");
@@ -64,8 +64,13 @@ namespace Xesin.GameplayCues
             EditorGUI.EndProperty();
         }
 
-        internal void AddTag(string value)
+        internal void AddTag(string value, SerializedProperty property)
         {
+            if (NeedsReload(property))
+            {
+                RefreshTagListProperty(property);
+            }
+
             tagListProperty.InsertArrayElementAtIndex(tagListProperty.arraySize);
 
             var newProperty = tagListProperty.GetArrayElementAtIndex(tagListProperty.arraySize - 1);
@@ -75,7 +80,7 @@ namespace Xesin.GameplayCues
             var tagValue = GameplayTagsContainer.RequestGameplayTag(value);
 
             valueProperty.stringValue = tagValue.value;
-            parentProperty.stringValue = tagValue.parentTag;
+            parentProperty.stringValue = tagValue.ParentTag;
 
             TriggerOnValidate(currentProperty);
             TriggerOnValidate(tagListProperty);
@@ -83,8 +88,13 @@ namespace Xesin.GameplayCues
             RefreshTagListProperty(currentProperty);
         }
 
-        internal void RemoveTag(string value)
+        internal void RemoveTag(string value, SerializedProperty property)
         {
+            if (NeedsReload(property))
+            {
+                RefreshTagListProperty(property);
+            }
+
             for (int i = 0; i < tagListProperty.arraySize; i++)
             {
                 var arrayElement = tagListProperty.GetArrayElementAtIndex(i);
@@ -103,14 +113,18 @@ namespace Xesin.GameplayCues
 
         private void RefreshTagListProperty(SerializedProperty property)
         {
+#if UNITY_2022_1_OR_NEWER
+            objectValue = (GameplayTagList)property.boxedValue;
+#else
             var targetObject = property.serializedObject.targetObject;
             var targetObjectClassType = targetObject.GetType();
-            var field = targetObjectClassType.GetField(property.propertyPath);
-            if (field != null)
-            {
+            var field = targetObjectClassType.GetField(property.propertyPath, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+
+            if(field != null)
+            { 
                 objectValue = (GameplayTagList)field.GetValue(targetObject);
             }
-
+#endif
             tagListProperty = property.FindPropertyRelative("gameplayTags");
             currentProperty = property;
         }
@@ -146,12 +160,14 @@ namespace Xesin.GameplayCues
         string m_CurrentName = string.Empty;
 
         SearchField m_SearchField;
+        private SerializedProperty workingProperty;
 
-        public GameplayTagListSelectorPopup(GameplayCueTagListDrawer drawer)
+        public GameplayTagListSelectorPopup(GameplayCueTagListDrawer drawer, SerializedProperty workingProperty)
         {
             m_Drawer = drawer;
             m_SearchField = new SearchField();
             m_ShouldClose = false;
+            this.workingProperty = workingProperty;
         }
 
         public override void OnOpen()
@@ -175,7 +191,7 @@ namespace Xesin.GameplayCues
             {
                 if (m_TreeState == null)
                     m_TreeState = new TreeViewState();
-                m_Tree = new GameplayTagListTreeView(m_TreeState, m_Drawer);
+                m_Tree = new GameplayTagListTreeView(m_TreeState, m_Drawer, workingProperty);
                 m_Tree.Reload();
             }
 
@@ -193,12 +209,15 @@ namespace Xesin.GameplayCues
         internal class GameplayTagListTreeView : TreeView
         {
             GameplayCueTagListDrawer m_Drawer;
-            public GameplayTagListTreeView(TreeViewState state, GameplayCueTagListDrawer drawer)
+            private SerializedProperty curentProperty;
+
+            public GameplayTagListTreeView(TreeViewState state, GameplayCueTagListDrawer drawer, SerializedProperty curentProperty)
                 : base(state)
             {
                 m_Drawer = drawer;
                 showBorder = true;
                 showAlternatingRowBackgrounds = true;
+                this.curentProperty = curentProperty;
             }
 
             protected override bool CanMultiSelect(TreeViewItem item)
@@ -296,22 +315,31 @@ namespace Xesin.GameplayCues
                 GameplayTagTreeViewItem item = args.item as GameplayTagTreeViewItem;
 
                 EditorGUI.BeginChangeCheck();
+#if UNITY_2022_1_OR_NEWER
+                bool isChecked = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag());
+                bool isInHierarchy = ((GameplayTagList)curentProperty.boxedValue).Contains(item.node.ToGameplayTag(), fullMatch: false);
+#else
+                bool isInHierarchy = m_Drawer.objectValue.Contains(item.node.ToGameplayTag(), fullMatch: false);
                 bool isChecked = m_Drawer.objectValue.Contains(item.node.ToGameplayTag());
+#endif
+                EditorGUI.showMixedValue = isInHierarchy && !isChecked;
+
                 isChecked = EditorGUI.ToggleLeft(rowrect, args.item.displayName, isChecked);
 
+                EditorGUI.showMixedValue = false;
                 if (EditorGUI.EndChangeCheck())
                 {
                     if (isChecked)
                     {
-                        m_Drawer.AddTag(item.node.ToGameplayTagString());
+                        m_Drawer.AddTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                     else if (item.node.parent != null)
                     {
-                        m_Drawer.RemoveTag(item.node.ToGameplayTagString());
+                        m_Drawer.RemoveTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                     else
                     {
-                        m_Drawer.RemoveTag(item.node.ToGameplayTagString());
+                        m_Drawer.RemoveTag(item.node.ToGameplayTagString(), curentProperty);
                     }
                 }
             }

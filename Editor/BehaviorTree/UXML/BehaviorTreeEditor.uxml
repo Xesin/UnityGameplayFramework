@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.xesin.gameplay-framework/Editor/BehaviorTree/BehaviorTreeEditor.uss?fileID=7433441132597879392&amp;guid=1f808d48db9aa2946a5bd4ca56a3d159&amp;type=3#BehaviorTreeEditor" />
+    <GameplayFramework.SplitView>
+        <ui:VisualElement name="left-panel" style="flex-grow: 1;">
+            <ui:Label tabindex="-1" text="Inspector" parse-escape-sequences="true" display-tooltip-when-elided="true" class="TitleLabel" />
+            <GameplayFramework.InspectorView style="flex-grow: 1;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="right-panel" style="flex-grow: 1;">
+            <ui:Label tabindex="-1" text="Tree View" parse-escape-sequences="true" display-tooltip-when-elided="true" class="TitleLabel" />
+            <GameplayFramework.AI.BehaviorTreeView focusable="true" style="flex-grow: 1;" />
+        </ui:VisualElement>
+    </GameplayFramework.SplitView>
+</ui:UXML>

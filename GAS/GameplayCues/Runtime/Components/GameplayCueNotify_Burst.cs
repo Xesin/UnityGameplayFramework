@@ -8,6 +8,12 @@ namespace Xesin.GameplayCues
 
         protected GameplayCueNotify_SpawnResult applicationSpawnResults = new GameplayCueNotify_SpawnResult(0);
 
+        protected override void ResetCues()
+        {
+            base.ResetCues();
+            applicationEffects.CleanUp();
+        }
+
         protected override bool OnActive(GameObject target, GameplayCueParameters parameters)
         {
             GameplayCueNotify_SpawnContext context = new GameplayCueNotify_SpawnContext(target, parameters);

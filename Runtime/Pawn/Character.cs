@@ -17,7 +17,7 @@ public class Character : Pawn
     // The object we are walking on
     private Transform baseObject;
 
-    private CharacterMovement characterMovement;
+    protected CharacterMovement characterMovement;
 
     protected override void Awake()
     {
@@ -32,7 +32,7 @@ public class Character : Pawn
         base.Restart();
     }
 
-    public void OnMovementModeChanged(MovementMode prevMovementMode)
+    public virtual void OnMovementModeChanged(MovementMode prevMovementMode)
     {
         if (!pressedJump || !characterMovement.IsFalling())
         {

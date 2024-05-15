@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.Util;
 using UnityEngine.SceneManagement;
+using Xesin.GameplayFramework.Domain;
+using Xesin.GameplayFramework.Utils;
 
 namespace Xesin.GameplayCues
 {
-    public class GameplayCueManager : ComponentSingleton<GameplayCueManager>
+    public class GameplayCueManager : MonoSingleton<GameplayCueManager>
     {
         private Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>> recycledQueue = new Dictionary<KeyValuePair<Type, GameplayTag>, Queue<GameplayCueNotify_GameObject>>();
         Dictionary<string, GameObject> loadedCues = new Dictionary<string, GameObject>();
@@ -25,6 +26,18 @@ namespace Xesin.GameplayCues
         private void OnDestroy()
         {
             SceneManager.sceneUnloaded -= OnSceneUnload;
+        }
+
+        [ExecuteOnReload]
+        private static void OnReload()
+        {
+            if (s_Instance)
+            {
+                foreach (var item in s_Instance.loadedCues)
+                {
+                    Addressables.Release(item.Value);
+                }
+            }
         }
 
         private void OnSceneUnload(Scene scene)
@@ -99,7 +112,7 @@ namespace Xesin.GameplayCues
             tag = GameplayTagsContainer.Instance.ResolveTag(tag);
             parameters.cueTag = tag;
 
-            if (!loadedCues.TryGetValue(tag.value, out var loadedCue))
+            if (!loadedCues.TryGetValue(tag.value, out var loadedCue) && eventType != GameplayCueEvent.Removed)
             {
                 var handler = Addressables.LoadAssetAsync<GameObject>(tag.value);
                 loadedCue = handler.WaitForCompletion();
@@ -109,7 +122,7 @@ namespace Xesin.GameplayCues
             if (loadedCue == null)
             {
                 //Didn't even load it, so IsOverride should not apply.
-                RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 return;
             }
 
@@ -121,15 +134,15 @@ namespace Xesin.GameplayCues
 
                     if (!staticCue.isOverride)
                     {
-                        RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                        RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                     }
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(tag.parentTag)) return;
+                    if (string.IsNullOrEmpty(tag.ParentTag)) return;
 
                     //Didn't even handle it, so IsOverride should not apply.
-                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                    RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 }
 
                 return;
@@ -144,7 +157,7 @@ namespace Xesin.GameplayCues
                     {
                         if (!spawnedCue.isOverride)
                         {
-                            RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                            RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                         }
 
                         spawnedCue.HandleGameplayCue(target, eventType, parameters);
@@ -154,7 +167,7 @@ namespace Xesin.GameplayCues
                 else
                 {
                     //Didn't even handle it, so IsOverride should not apply.
-                    RouteGameplayCue(target, new GameplayTag(tag.parentTag), eventType, parameters);
+                    RouteGameplayCue(target, new GameplayTag(tag.ParentTag), eventType, parameters);
                 }
             }
         }
