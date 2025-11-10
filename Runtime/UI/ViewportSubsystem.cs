@@ -5,14 +5,13 @@ using UnityEngine.SceneManagement;
 using Xesin.GameplayFramework;
 using Xesin.GameplayFramework.Utils;
 
-public class ViewportSubsystem : MonoSingleton<ViewportSubsystem>
+public class ViewportSubsystem : Xesin.GameplayFramework.Subsystem<ViewportSubsystem>
 {
     private Dictionary<LocalPlayer, UIViewport> playerViewports = new Dictionary<LocalPlayer, UIViewport>();
     private UIViewport screenViewport;
 
-    protected override void Awake()
+    public override void OnRegistered()
     {
-        base.Awake();
         SceneManager.sceneUnloaded += OnSceneUnLoaded;
     }
 

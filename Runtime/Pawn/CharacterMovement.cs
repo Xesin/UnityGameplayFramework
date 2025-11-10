@@ -194,7 +194,7 @@ namespace Xesin.GameplayFramework
                     Vector3 baseVelocity = Vector3.zero;
                     if (movementBase.TryGetComponent<Rigidbody>(out var rigidbody) && !rigidbody.isKinematic)
                     {
-                        baseVelocity = rigidbody.velocity;
+                        baseVelocity = rigidbody.linearVelocity;
 
                         Vector3 characterBasePosition = transform.position + characterController.center - (new Vector3(0, characterController.height * 0.5f, 0));
                         Vector3 baseTangentialVelocity = GetMovementBaseTangentialVelocity(rigidbody, characterBasePosition);

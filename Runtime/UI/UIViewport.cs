@@ -17,11 +17,11 @@ public class UIViewport : MonoBehaviour
         Owner = owner;
         if (owner)
         {
-            ViewportSubsystem.Instance.AddPlayerViewport(owner, this);
+            Subsystems.GetSubsystem<ViewportSubsystem>().AddPlayerViewport(owner, this);
         }
         else
         {
-            ViewportSubsystem.Instance.SetScreenViewport(this);
+            Subsystems.GetSubsystem<ViewportSubsystem>().SetScreenViewport(this);
         }
     }
 
