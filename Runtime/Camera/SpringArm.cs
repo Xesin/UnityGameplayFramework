@@ -27,8 +27,10 @@ namespace Xesin.GameplayFramework
 
         RaycastHit[] raycastHits = new RaycastHit[2];
 
-        private void LateUpdate()
+        protected override void LateUpdate()
         {
+            base.LateUpdate();
+
             Vector3 armOrigin = transform.position + armOffset;
             Vector3 armDirection = -transform.forward;
             Vector3 newWorldPosition = armOrigin + armDirection * armLength;

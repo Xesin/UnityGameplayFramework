@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using Xesin.GameplayFramework;
 using Xesin.GameplayFramework.Utils;
 
+[AutoCreateSubsystem]
 public class ViewportSubsystem : Xesin.GameplayFramework.Subsystem<ViewportSubsystem>
 {
     private Dictionary<LocalPlayer, UIViewport> playerViewports = new Dictionary<LocalPlayer, UIViewport>();
